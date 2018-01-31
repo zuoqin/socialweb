@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Time Zones Managemnet</title>
+    
+    <meta name="google-signin-client_id" content="135819791698-j5rf028jr7jah69lmjhfmlhq5c3l3sia.apps.googleusercontent.com">
+    <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="css/bootstrap2-toggle.min.css" rel="stylesheet" type="text/css">
+
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
+    
+    <link href="css/style.css?ver2017.12.36" rel="stylesheet" type="text/css">
+    
+    <link href="css/jquery.timepicker.css" rel="stylesheet" type="text/css">
+    
+
+
+    <!-- Custom Fonts -->
+    <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    <link href="css/bootstrap-select.min.css" rel="stylesheet" type="text/css">
+    
+    <script type="text/javascript" src="javascript/jquery.min.js"></script>
+    <script type="text/javascript" src="javascript/bootstrap.min.js"></script>
+
+    
+    <link rel="icon" type="image/png" href="favicon.png?v=20171001">
+    <link rel="icon" type="image/x-icon" href="favicon.ico?v=20171001" >
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?v=220171001"/>
+  </head>
+  <body>
+    <div id="app">
+    </div>
+
+    <div class="row" id="socialbuttons">
+      <div class="col-md-6">
+        <fb:login-button 
+          scope="public_profile,email"
+          onlogin="checkLoginState();">
+        </fb:login-button>
+      </div>
+      <div class="col-md-6">
+        <div class="g-signin2" data-onsuccess="onSignIn" style="margin-top -100px; margin-left: 530px"></div>
+      </div>
+    </div>
+
+    <script>
+     var xhttp = new XMLHttpRequest();
+     var xhttp1 = new XMLHttpRequest()
+     var picture = "";
+     var userid = 0;
+     var username = "";
+     window.fbAsyncInit = function() {
+       FB.init({
+         appId      : '164410374185985',
+         cookie     : true,
+         xfbml      : true,
+         version    : 'v2.11'
+       });
+       
+       FB.AppEvents.logPageView();   
+       
+     };
+
+     (function(d, s, id){
+       var js, fjs = d.getElementsByTagName(s)[0];
+       if (d.getElementById(id)) {return;}
+       js = d.createElement(s); js.id = id;
+       js.src = "https://connect.facebook.net/en_US/sdk.js";
+       fjs.parentNode.insertBefore(js, fjs);
+     }(document, 'script', 'facebook-jssdk'));
+
+     function statusChangeCallback(response) {
+       console.log('statusChangeCallback');
+       console.log(response);
+       // The response object is returned with a status field that lets the
+       // app know the current login status of the person.
+       // Full docs on the response object can be found in the documentation
+       // for FB.getLoginStatus().
+       if (response.status === 'connected') {
+         userid = response.authResponse.userID;
+         // Logged into your app and Facebook.
+         testAPI();
+       } else {
+         // The person is not logged into your app or we are unable to tell.
+         document.getElementById('status').innerHTML = 'Please log ' +
+                                                       'into this app.';
+       }
+     }
+     
+     // Here we run a very simple test of the Graph API after login is
+     // successful.  See statusChangeCallback() for when this call is made.
+     function testAPI() {
+       console.log('Welcome!  Fetching your information.... ');
+       FB.api('/me', function(response) {
+         username = response.name;
+         //console.log('Successful login for: ' + response.name);
+         //document.getElementById('status').innerHTML =
+         //  'Thanks for logging in, ' + response.name + '!';
+       });
+
+
+       FB.api(
+         '/' + userid + '/picture',
+         'GET',
+         {},
+         function(response) {
+           // Insert your code here
+           //console.log(response.data);
+
+           xhttp.open("GET", response.data.url, true);
+           xhttp.overrideMimeType("text/plain; charset=x-user-defined");
+           xhttp.send();
+         }
+       );
+
+
+       /* FB.api(
+        *   '/' + userid,
+        *   'GET',
+        *   {},
+        *   function(response) {
+        *     // Insert your code here
+        *     console.log(response.data);
+
+        *     xhttp.open("GET", response.data.url, true);
+        *     xhttp.overrideMimeType("text/plain; charset=x-user-defined");
+        *     xhttp.send();
+        *   }
+        * );*/
+     }
+     
+     function checkLoginState() {
+       FB.getLoginStatus(function(response) {
+         statusChangeCallback(response);
+       });
+     }
+
+     function b64EncodeUnicode(str) {
+       // first we use encodeURIComponent to get percent-encoded UTF-8,
+       // then we convert the percent encodings into raw bytes which
+       // can be fed into btoa.
+       return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                                                   function toSolidBytes(match, p1) {
+                                                     return String.fromCharCode('0x' + p1);
+                                                   }));
+     }
+     
+     function base64encode(input) {
+       var result = '', binData, i;
+       var base64Alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='.split(''); // Base is 65 in fact :-)
+       if (typeof input === 'string') for (i = 0, input = input.split(''); i < input.length; i++) input[i] = input[i].charCodeAt(0);
+       // Extreme optimization. Something like black magic.
+       // Risk of breaking the brain :-)
+       for (i = 0; i < input.length; i += 3) {
+         // Warning, bitwise operations! :-)
+         // Grabbing three bytes (octets in binary):
+         binData = (input[i] & 0xFF) << 16 |     // FF.00.00
+                   (input[i + 1] & 0xFF) << 8 |  // 00.FF.00
+                   (input[i + 2] & 0xFF);        // 00.00.FF
+         // And converting them to four base64 "sixtets" (letters):
+         result += base64Alphabet[(binData & 0xFC0000) >>> 18] +                   //11111100.00000000.00000000 = 0xFC0000 = 16515072
+                   base64Alphabet[(binData & 0x03F000) >>> 12] +                   //00000011.11110000.00000000 = 0x03F000 = 258048
+                   base64Alphabet[( i + 3 >= input.length && (input.length << 1) % 3 === 2 ? 64 :
+                                    (binData & 0x000FC0) >>> 6 )] +              //00000000.00001111.11000000 = 0x000FC0 = 4032
+                   base64Alphabet[( i + 3 >= input.length && (input.length << 1) % 3 ? 64 :
+                                    binData & 0x00003F )];                          //00000000.00000000.00111111 = 0x00003F = 63
+         // If we haven't last byte, or two (for complete three octets),
+         // we place '=' [61] letter (or two) at the end.
+       }
+       return result;
+     } // base64
+
+
+     
+     xhttp.onreadystatechange = function() {
+       if (this.readyState == 4 && this.status == 200){
+         //document.getElementById("img").src = 'data:image/jpeg;base64,' + base64encode(this.response).replace(String.fromCharCode(32), "+");
+
+         picture = base64encode(this.response);
+         window.location = '#/login/' + userid + '?from=facebook';
+         //signOut();
+       }
+       //console.log(base64Encode(this.response));
+     }
+
+    </script>
+
+    <script src="js/compiled/socialweb.js?ver2017.12.54" type="text/javascript"></script>
+
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+  </body>
+  <script type="text/javascript">
+   var google_profile = null;
+   function onSignIn(googleUser) {
+     google_profile = googleUser.getBasicProfile();
+     console.log('ID: ' + google_profile.getId()); // Do not send to your backend! Use an ID token instead.
+     console.log('Name: ' + google_profile.getName());
+     console.log('Image URL: ' + google_profile.getImageUrl());
+     console.log('Email: ' + google_profile.getEmail()); // This is null if the 'email' scope is not present.
+
+     if(google_profile.getImageUrl().length > 0){
+       xhttp1.open("GET", google_profile.getImageUrl(), true);
+       xhttp1.overrideMimeType("text/plain; charset=x-user-defined");
+       xhttp1.send();
+     }
+   }
+
+   xhttp1.onreadystatechange = function() {
+     if (this.readyState == 4 && this.status == 200)
+       {
+         //document.getElementById("img").src = 'data:image/jpeg;base64,' + base64encode(this.response);
+         picture  = base64encode(this.response);
+         window.location = '#/login/' + google_profile.getId() + '?from=google';
+         signOut();
+       }
+     //console.log(base64Encode(this.response));
+   }
+   
+   function signOut() {
+     var auth2 = gapi.auth2.getAuthInstance();
+     auth2.signOut().then(function () {
+       console.log('User signed out.');
+     });
+   }
+
+   function readURL(input) {
+     if (input.files && input.files[0]) {
+       var reader = new FileReader();
+
+       reader.onload = function (e) {
+         $('#userpic')
+           .attr('src', e.target.result)
+           .width(200)
+           .height(200);
+       };
+
+       reader.readAsDataURL(input.files[0]);
+     }
+   }
+   
+  </script>
+</html>

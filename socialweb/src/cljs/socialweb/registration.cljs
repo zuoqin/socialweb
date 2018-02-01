@@ -44,17 +44,17 @@
 (defonce app-state (atom  {:error "" :modalText "Modal Text" :modalTitle "Modal Title" :state 0} ))
 
 
-(defn setLoginError [error]
+(defn setLoginError [title error]
   (swap! app-state assoc-in [:error] 
     (:error error)
   )
 
   (swap! app-state assoc-in [:modalTitle] 
-    (str "Login Error")
+    title
   ) 
 
   (swap! app-state assoc-in [:modalText] 
-    (str (:error error))
+    (str error)
   ) 
 
   (swap! app-state assoc-in [:state] 0) 
@@ -78,7 +78,7 @@
   (let [     
       newdata {:error (:error (get response (keyword "response") ))  }
     ]
-    (setLoginError newdata)
+    (setLoginError "Create user failed" newdata)
   )
   ;; TO-DO: Delete Trip from Core
   ;;(.log js/console (str  (get (first response)  "Title") ))
@@ -86,21 +86,26 @@
 
 
 (defn OnCreateUserSuccess [response]
-
+  (let [msg (get response (keyword "result"))]
+    
+    (setLoginError (if (= msg "messages sent") "Registration succeeded" "Registration failed") (if (= msg "messages sent") "Check your email to confirm address" msg))
+    ;(.log js/console msg)
     (-> js/document
       .-location
       (set! "#/login"))
+  )
 )
 
 (defn doregister [username password]
-  (POST (str settings/apipath  "api/user") {
+  (swap! app-state assoc-in [:state] 1)
+  (POST (str settings/apipath  "api/register") {
     :handler OnCreateUserSuccess
     :error-handler OnCreateUserError
     :headers {
       :content-type "application/json" 
       :Authorization (str "Bearer "  "the empty token")}
     :format :json
-    :params { :login username :password password :role "user" }})
+    :params { :email username :password password}})
 )
 
 

@@ -29,7 +29,7 @@
                  [ring/ring-core "1.5.1"]
                  [ring/ring-defaults "0.2.1"]
                  [selmer "1.10.5"]
-
+                 [com.draines/postal "2.0.2"]
                  [clj-jwt "0.1.1"]
                  [jumblerg/ring.middleware.cors "1.0.1"]        
                  ]

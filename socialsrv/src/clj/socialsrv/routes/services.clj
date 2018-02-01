@@ -52,11 +52,36 @@
     (OPTIONS "/socialtoken" []
       :summary  "Allows OPTIONS requests"
       (ok "")
-    )    
+    )
   )
 
   (context "/api" []
     :tags ["user"]
+
+   (POST "/register" []
+      ;:return String
+      :body-params [email :- String, password :- String]
+      :summary  "Register into time zones"
+      (ok (let [res (userapi/registerUser email password)]
+            {:result res}
+        )
+      )
+    )
+
+   (GET "/register" []
+      ;:return String
+      :query-params [id :- Long]
+      :summary  "Registration confirm into time zones"
+      (ok (let [] (userapi/confirmUser id)
+            {:result "success"}
+        )
+      )
+    )
+
+    (OPTIONS "/register" []
+      :summary  "Allows OPTIONS requests"
+      (ok "")
+    )
 
     (GET "/user" []
       :header-params [authorization :- String]

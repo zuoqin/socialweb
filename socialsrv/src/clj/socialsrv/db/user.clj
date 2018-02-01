@@ -71,11 +71,28 @@
      }])
 )
 
-
-(defn create-user [name email password role locked picture]
+(defn confirm-user [id]
   (d/transact
    conn
-   [{:db/id #db/id[:db.part/user -1000001] :user/name name :user/email email :user/password password :user/role role :user/locked false :user/logcnt 0 :user/source ""}]
+   [{ ;; this finds the existing entity
+     :db/id id ;;#db/id [:db.part/user]  ;; will be replaced by exiting id
+     :user/confirmed true
+     }])
+)
+
+
+(defn create-user [name email password role locked picture confirmed]
+  (let [
+    ]
+    (if (= ["" ""] (find-user email))
+      (let [res (d/transact
+          conn
+          [{:db/id #db/id[:db.part/user -1000001] :user/name name :user/email email :user/password password :user/role role :user/locked false :user/logcnt 0 :user/source "" :user/confirmed confirmed}]
+          )]
+        (second (first (:tempids @res)))
+      )
+      0
+    )
   )
 )
 

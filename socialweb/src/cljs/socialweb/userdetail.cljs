@@ -184,6 +184,14 @@
 
     (jquery
       (fn []
+         (-> (jquery (str "#chckconfr"))
+           (.bootstrapToggle (clj->js {:on "Confirmed" :off "Not confirmed"}))
+         )
+      )
+    )
+
+    (jquery
+      (fn []
         (-> (jquery (str "#chckblock"))
           (.on "change"
             (fn [e]
@@ -389,14 +397,22 @@
                   
                 )
 
-                (dom/label {:className "checkbox-inline"}
-                  (dom/input {:id (str "chckblock") :type "checkbox" :checked (:locked @data) :data-toggle "toggle" :data-size "large" :data-width "100" :data-height "26"})
+                (dom/div {:className "row"}
+                  (dom/label {:className "checkbox-inline"}
+                    (dom/input {:id (str "chckblock") :type "checkbox" :checked (:locked @data) :data-toggle "toggle" :data-size "large" :data-width "100" :data-height "26"})
+                  )
+                )
+
+                (dom/div {:className "row" :style {:margin-top "5px"}}
+                  (dom/label {:className "checkbox-inline"}
+                    (dom/input {:id (str "chckconfr") :disabled true :type "checkbox" :checked (:confirmed @data) :data-toggle "toggle" :data-size "large" :data-width "200" :data-height "26"})
+                  )
                 )
 
                 (dom/h5 "Picture: "
                   ;(dom/input {:type "file" :onChange (fn [e] (js/readURL (.. e -target))) :name "file"})
                   (dom/input {:type "file" :onChange (fn [e] (readurl (.. e -target))) :name "file"})
-                  (dom/img {:id "userpic" :style {:max-width "200px" :max-height "200px"} :src (:pic @app-state) :alt "User image"})
+                  (dom/img {:id "userpic" :style {:display (if (or (nil? (:pic @app-state)) (= "" (:pic @app-state))) "none" "block") :max-width "200px" :max-height "200px"} :src (:pic @app-state) :alt "User image"})
                 )
               )              
             )

@@ -37,14 +37,11 @@
     </div>
 
     <div class="row" id="socialbuttons">
-      <div class="col-md-6">
-        <fb:login-button 
-          scope="public_profile,email"
-          onlogin="checkLoginState();">
-        </fb:login-button>
+      <div class="col-md-6" style="text-align: right;">
+        <div class="fb-login-button" data-max-rows="1" data-size="large" data-button-type="continue_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="false" onlogin="checkLoginState();"></div>
       </div>
-      <div class="col-md-6">
-        <div class="g-signin2" data-onsuccess="onSignIn" style="margin-top -100px; margin-left: 530px"></div>
+      <div class="col-md-6" style="text-align: left; ">
+        <div id="g-signin2"  style="margin-top -100px;"></div>
       </div>
     </div>
 
@@ -70,7 +67,7 @@
        var js, fjs = d.getElementsByTagName(s)[0];
        if (d.getElementById(id)) {return;}
        js = d.createElement(s); js.id = id;
-       js.src = "https://connect.facebook.net/en_US/sdk.js";
+       js.src = "https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.12&appId=164410374185985&autoLogAppEvents=1";
        fjs.parentNode.insertBefore(js, fjs);
      }(document, 'script', 'facebook-jssdk'));
 
@@ -183,16 +180,33 @@
 
          picture = base64encode(this.response);
          window.location = '#/login/' + userid + '?from=facebook';
-         //signOut();
+
+         FB.logout(function(response) {
+           // Person is now logged out
+         });
        }
        //console.log(base64Encode(this.response));
      }
+     function onFailure(error) {
+       console.log(error);
+     } 
 
+     function renderGoogleButton() {
+       gapi.signin2.render('g-signin2', {
+         'scope': 'profile email',
+         'width': 254,
+         'height': 40,
+         'longtitle': true,
+         'theme': 'dark',
+         'onsuccess': onSignIn,
+         'onfailure': onFailure
+       });
+     }
     </script>
 
     <script src="js/compiled/socialweb.js?ver2017.12.55" type="text/javascript"></script>
 
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script src="https://apis.google.com/js/platform.js?onload=renderGoogleButton" async defer></script>
   </body>
   <script type="text/javascript">
    var google_profile = null;

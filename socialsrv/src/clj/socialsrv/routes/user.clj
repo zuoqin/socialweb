@@ -13,12 +13,13 @@
             [clojure.string :as str]
 ))
 
-(defn getUsers [token]
+
+(defn getUsers [token page]
   (let [
     usercode (:iss (-> token str->jwt :claims)  ) 
-    result (into [] (db/get-users usercode)   )         
+    result (into [] (db/get-users usercode page))         
     ]
-    (println (str "usercode=" usercode) )
+    ;(println (str "usercode=" usercode) )
     result
   )
 )
@@ -61,6 +62,44 @@ link
     (:message result)
   )
 )
+
+
+(defn inviteUser [email]
+  (let [
+    msg (str  "
+      <html>
+        <head>
+        </head>
+        <body>
+          <h1>Welcome to Time Zones manager!</h1>
+          <p>
+  Dear friend, you have been invited to join Time Zones Manager! Please, follow this
+            <a href=\"http://devstat.aytm.com:3449/#/register" "\">
+  link
+            </a> to register.
+          </p>
+        </body>
+      </html>"
+      )
+    result (try (postal/send-message {:host "mail.smtp2go.com"
+                                    :port 2525
+                                    :tls true
+                                    :user "zuoqin"
+                                    :pass "@Qwerty123"}
+                                   {:from "admin@timezones.com"
+                                    :to email
+                                    :subject "Your invitation to Time Zones Manager"
+                                    :body [{:type "text/html; charset=utf-8"
+                                            :content msg}]
+                                    }
+                                   )
+        (catch Exception e {:message (str "Error sending email to: " email)}))
+        
+    ]
+    (:message result)
+  )
+)
+
 
 (defn createUser [token name email password role locked pic]
   (let [

@@ -113,12 +113,12 @@
       ]
       (dom/div
         (om/build socialcore/website-view socialcore/app-state {})
-        (dom/div { :style {:margin-top "70px"}}
+        (dom/div { :style {:margin-top "70px" :margin-left "5px"}}
           (dom/button {:className "btn btn-primary" :onClick (fn [e] (-> js/document
         .-location
         (set! "#/zonedetail/0")))} "Add New")
         )
-        (dom/div {:className "panel panel-primary"}
+        (dom/div {:className "panel panel-primary" :style {:margin-left "5px"}}
           (dom/div {:className "panel-heading"}
             (dom/div {:className "row"}
               (dom/div {:className "col-md-3"}

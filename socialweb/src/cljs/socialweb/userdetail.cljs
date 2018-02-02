@@ -359,7 +359,7 @@
       styleprimary {:style {:margin-top "70px"}}
       ]
       (dom/div
-        ;(om/build tripcore/website-view data {})
+        (om/build socialcore/website-view data {})
         (dom/div {:id "user-detail-container"}
           (dom/span
             (dom/div  (assoc styleprimary  :className "panel panel-default"  :id "divUserInfo")

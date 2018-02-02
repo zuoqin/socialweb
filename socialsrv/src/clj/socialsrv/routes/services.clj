@@ -56,7 +56,7 @@
   )
 
   (context "/api" []
-    :tags ["user"]
+    :tags ["register"]
 
    (POST "/register" []
       ;:return String
@@ -82,13 +82,40 @@
       :summary  "Allows OPTIONS requests"
       (ok "")
     )
+  )
+
+  (context "/api" []
+    :tags ["invite"]
+
+   (POST "/invite" []
+      ;:return String
+      :header-params [authorization :- String]
+      :body-params [email :- String]
+      :summary  "Invite into time zones"
+      (ok (let [res (userapi/inviteUser email)]
+            {:result res}
+        )
+      )
+   )
+
+   (OPTIONS "/invite" []
+     :summary  "Allows OPTIONS requests"
+     (ok "")
+   )
+  )
+
+  (context "/api" []
+    :tags ["user"]
+
+
+
 
     (GET "/user" []
       :header-params [authorization :- String]
-      ;;:query-params [{messageid :- Long -1} ]
+      :query-params [{page :- Long 0} ]
       :summary      "retrieve all users for current login"
 
-      (ok  (userapi/getUsers (nth (str/split authorization #" ") 1))) 
+      (ok  (userapi/getUsers (nth (str/split authorization #" ") 1) page)) 
     )
 
     (POST "/user" []

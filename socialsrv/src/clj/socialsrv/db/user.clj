@@ -5,6 +5,24 @@
             [socialsrv.config :refer [env]]))
 
 
+
+(defn find-user-by-id [id]
+  (let [
+    users (d/q '[:find ?email
+                      :in $ ?eid
+                      :where
+                      [?eid :user/email ?email]
+                      [?eid :user/confirmed true]
+                      [?eid]
+                     ]
+
+                     (d/db conn) id)
+    ]
+    (first users)
+  )
+)
+
+
 (defn find-user [email]
   (let [users (d/q '[:find ?email ?r
                       :in $ ?email
@@ -18,7 +36,7 @@
   )
 )
 
-(defn get-users [email]
+(defn get-users [email page]
   (let [
         user (find-user email)
 
@@ -39,19 +57,19 @@
                 (if (or ( = (nth user 1)  "admin" )  
                         ( = (nth user 1)  "manager" )
                         )
-                  (d/q '[:find ?email ?role ?locked ?u ?p ?pwd ?s ?c ?n
-                               :where
-                               [?u :user/email ?email]
-                               [?u :user/role ?role]
-                               [(get-else $ ?u :user/locked false) ?locked]
-                               [(get-else $ ?u :user/picture "") ?p]
-                               [(get-else $ ?u :user/password "") ?pwd]
-                               [(get-else $ ?u :user/confirmed false) ?c]
-                               [(get-else $ ?u :user/source "site") ?s]
-                               [(get-else $ ?u :user/name false) ?n]
-                               ]
-                        (d/db conn)) #{})
-                  )
+                  (take 5 (drop (* page 5) (sort-by first (d/q '[:find ?email ?role ?locked ?u ?p ?pwd ?s ?c ?n
+                  :where
+                  [?u :user/email ?email]
+                  [?u :user/role ?role]
+                  [(get-else $ ?u :user/locked false) ?locked]
+                  [(get-else $ ?u :user/picture "") ?p]
+                  [(get-else $ ?u :user/password "") ?pwd]
+                  [(get-else $ ?u :user/confirmed false) ?c]
+                  [(get-else $ ?u :user/source "site") ?s]
+                  [(get-else $ ?u :user/name false) ?n]
+                  ]
+                  (d/db conn))))) #{})
+               )
     ]
     users
   )

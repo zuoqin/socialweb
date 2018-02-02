@@ -130,7 +130,6 @@
     :handler OnCreateZoneSuccess
     :error-handler OnCreateZoneError
     :headers {
-      :content-type "application/json" 
       :Authorization (str "Bearer "  (:token (:token @socialcore/app-state)))}
     :format :json
     :params { :user (js/parseInt (:selecteduser @socialcore/app-state)) :name (:name @app-state) :city (:city @app-state) :diff (js/parseFloat (:diff @app-state))}})

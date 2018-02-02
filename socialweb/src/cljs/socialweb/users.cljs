@@ -5,6 +5,7 @@
             [secretary.core :as sec :include-macros true]
             [socialweb.core :as socialcore]
             [ajax.core :refer [GET POST]]
+            [clojure.string :as str]
             [socialweb.settings :as settings]
   )
   (:import goog.History)
@@ -15,11 +16,6 @@
 (defonce app-state (atom  {:users []}))
 
 
-(defn OnGetUsers [response]
-   (swap! app-state assoc :users  (get response "Users")  )
-   (.log js/console (:users @app-state)) 
-
-)
 
 (defn handlechange [e]
   (swap! socialcore/app-state assoc-in [(keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
@@ -30,15 +26,12 @@
   (.log js/console (str "something bad happened: " status " " status-text))
 )
 
-
-(defn getUsers [data] 
-  (GET (str settings/apipath "api/user") {
-    :handler OnGetUsers
-    :error-handler error-handler
-    :headers {
-      :content-type "application/json"
-      :Authorization (str "Bearer "  (:token  (first (:token @socialcore/app-state)))) }
-  })
+(defn comp-users
+  [user1 user2]
+  (if (> (compare (:email user1) (:user user2)) 0)
+      false
+      true
+  )
 )
 
 (defn show-modal-invite []
@@ -197,17 +190,24 @@
       (map (fn [item]
         (dom/div {:className "row"}
           (dom/div {:className "col-md-4" :style {:text-align "center"}}
+            (dom/a {:href (str  "#/userdetail/" (:id item))} (:name item))
+          )
+          (dom/div {:className "col-md-3" :style {:text-align "center"}}
             (dom/a {:href (str  "#/userdetail/" (:id item))} (:email item))
           )
-          (dom/div {:className "col-md-4" :style {:text-align "center"}}
+          (dom/div {:className "col-md-3" :style {:text-align "center"}}
             (dom/a {:href (str  "#/userdetail/" (:id item))} (:role item))
           )
 
-          (dom/div {:className "col-md-4" :style {:text-align "center"}}
+          (dom/div {:className "col-md-1" :style {:text-align "center"}}
             (dom/a {:href (str  "#/userdetail/" (:id item))} (if (= true (:locked item)) "Yes" "No"))
           )
+
+          (dom/div {:className "col-md-1" :style {:text-align "center"}}
+            (dom/a {:href (str  "#/userdetail/" (:id item))} (if (= true (:confirmed item)) "Yes" "No"))
+          )
         )                
-        )(:users data)
+        )(sort (comp comp-users) (filter (fn [x] (if (or (> (.indexOf (str/lower-case (:name x)) (str/lower-case (:search @socialcore/app-state))) -1) (> (.indexOf (str/lower-case (:email x)) (str/lower-case (:search @socialcore/app-state))) -1)) true false)) (:users data)))
       )
     )
   )
@@ -219,6 +219,11 @@
   )
 )
 
+(defn load-users []
+  (let []    
+    (socialcore/load-users 1)
+  )
+)
 
 
 (defcomponent users-view [data owner]
@@ -234,26 +239,35 @@
           (dom/button {:className "btn btn-primary" :style {} :onClick (fn [e] (-> js/document .-location (set! "#/userdetail")))} "Add New")
 
           (if (or (= (:role (:user @socialcore/app-state)) "admin") (= (:role (:user @socialcore/app-state)) "admin"))
-            (dom/button {:className "btn btn-primary" :onClick (fn [e] (show-modal-invite))} "Invite")
+            (dom/button {:className "btn btn-primary" :style {:margin-left "15px"} :onClick (fn [e] (show-modal-invite))} "Invite")
           )
         )
-        (dom/div {:className "panel panel-primary" :style {:margin-left "5px"}}
+        (dom/div {:className "panel panel-primary" :style {:margin-left "5px" :margin-top "5px"}}
           (dom/div {:className "panel-heading"}
             (dom/div {:className "row"}
               (dom/div {:className "col-md-4" :style {:text-align "center"}}
-                "user"
+                "Name"
               )
-              (dom/div {:className "col-md-4" :style {:text-align "center"}}
-                "role"
+              (dom/div {:className "col-md-3" :style {:text-align "center"}}
+                "User"
               )
-              (dom/div {:className "col-md-4" :style {:text-align "center"}}
-                "locked"
+              (dom/div {:className "col-md-3" :style {:text-align "center"}}
+                "Role"
+              )
+              (dom/div {:className "col-md-1" :style {:text-align "center"}}
+                "Locked"
+              )
+              (dom/div {:className "col-md-1" :style {:text-align "center"}}
+                "Confirmed"
               )
             )
           )
           (om/build showusers-view  data {})
           (addModal)
           (om/build addmodalinvite  data {})
+        )
+        (dom/div {:className "panel-footer"}
+          (dom/button {:className (if (= 2 (:state @data)) "btn btn-info m-progress no-print" "btn btn-info no-print") :disabled (:nomoredeals @data) :style {:width "100%"} :onClick (fn [e] (load-users))} (if (:nomoredeals @data) "All users retrieved" "Next..."))
         )
       ) 
     )

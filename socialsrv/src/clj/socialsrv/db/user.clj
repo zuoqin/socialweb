@@ -6,6 +6,28 @@
 
 
 
+(defn get-user-by-id [id]
+  (let [
+    users (d/q '[:find ?email ?role ?locked ?p ?pwd ?c ?s ?n
+                  :in $ ?eid 
+                  :where
+                  [?eid :user/email ?email]
+                  [?eid :user/role ?role]
+                  [(get-else $ ?eid :user/locked false) ?locked]
+                  [(get-else $ ?eid :user/picture "") ?p]
+                  [(get-else $ ?eid :user/password "") ?pwd]
+                  [(get-else $ ?eid :user/confirmed false) ?c]
+                  [(get-else $ ?eid :user/source "site") ?s]
+                  [(get-else $ ?eid :user/name false) ?n]
+                  [?eid]
+                ]
+                (d/db conn) id)
+    ]
+    (first users)
+  )
+)
+
+
 (defn find-user-by-id [id]
   (let [
     users (d/q '[:find ?email

@@ -35,10 +35,10 @@
   (let [e (partial entity conn)]
     (map #(-> % first e d/touch) results)))
 
-(defn create-user [id from picture]
+(defn create-user [id from picture name]
   (d/transact
    conn
-   [{:db/id #db/id[:db.part/user -1000001] :user/email id :user/password id :user/locked false :user/confirmed true :user/role "user" :user/source from :user/name "" :user/picture (str "data:image/jpeg;base64," picture)}]
+   [{:db/id #db/id[:db.part/user -1000001] :user/email id :user/password id :user/locked false :user/confirmed true :user/role "user" :user/source from :user/name name :user/picture (str "data:image/jpeg;base64," picture)}]
   )
 )
 
@@ -82,12 +82,36 @@
   )
 )
 
+(defn unlock-user [email]
+  (let [
+    userid (first (first (d/q '[:find ?u
+                          :in $ ?email
+                          :where
+                          [?u :user/email ?email]
+                          ]
+                        (d/db conn) email)))
+
+    ]
+    (println (str "userid=" userid) )
+    (d/transact
+      conn
+      [{
+        :db/id userid ;; will be replaced by exiting id
+        :user/logcnt 0
+       }
+      ]
+    )
+  )
+)
+
+
 (defn find-user-by-email [email]
-  (let [users (d/q '[:find ?email ?l
+  (let [users (d/q '[:find ?email ?l ?c
                       :in $ ?email
                       :where
                       [?u :user/email ?email]
-                      [?u user/locked ?l]
+                      [(get-else $ ?u :user/locked false) ?l]
+                      [(get-else $ ?u :user/confirmed false) ?c]
                      ]
                      (d/db conn) email)
     ]

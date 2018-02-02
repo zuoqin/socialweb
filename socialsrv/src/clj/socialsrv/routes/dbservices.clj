@@ -19,13 +19,13 @@
   }
 )
 
-(defn checkSocialUser [id from picture]
+(defn checkSocialUser [id from picture name]
   (let [
        user (first (db/find-social-user id from))
     ]
     (if (nil? user)
       (let []
-        (db/create-user id from picture)
+        (db/create-user id from picture name)
       )
     )
   )
@@ -36,22 +36,29 @@
   (let [
        user (db/find-user-by-email login)
        locked (nth user 1)
+       confirmed (nth user 2)
     ]
     (if (nil? user)
       0
       (if (= true locked)
         1
-        (let [
-          user (first (db/find-user login password))
-          ]
-          (if (nil? user)
-            (let [
-                 ;tr1  (print user)
-              ]
-              (db/increment-lock login)
-              2
+        (if (= false confirmed)
+          4
+          (let [
+            user (first (db/find-user login password))
+            ]
+            (if (nil? user)
+              (let [
+                   ;tr1  (print user)
+                ]
+                (db/increment-lock login)
+                2
+              )
+              (let []
+                (db/unlock-user login)
+                3
+              )
             )
-            3
           )
         )
       )

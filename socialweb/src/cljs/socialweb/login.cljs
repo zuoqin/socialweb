@@ -97,63 +97,8 @@
   (.log js/console (str "something bad happened: " status " " status-text))
 )
 
-(defn map-zone [zone]
-  {:id (get zone 0) :name (get zone 1) :city (get zone 2) :diff (get zone 3)}
-)
-
-(defn OnGetZones [response]
-  (swap! socialcore/app-state assoc-in [(keyword (str (:id (:user @socialcore/app-state)))) :zones] (map map-zone response))
-  (set! (.-display (.-style (.getElementById js/document "socialbuttons"))) "none")
-  (aset js/window "location" "#/users")
-)
 
 
-(defn reqzones []
-  (GET (str settings/apipath "api/zone?id=" (:id (:user @socialcore/app-state ))) {:handler OnGetZones
-      :error-handler error-handler
-      :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @socialcore/app-state))) }
-    }
-  )
-)
-
-
-(defn setUser [theUser]
-  (let [cnt (count (:users @socialcore/app-state))]
-    (swap! socialcore/app-state assoc-in [:users cnt] {:role (nth theUser 1)  :email (nth theUser 0) :locked (nth theUser 2) :id (nth theUser 3) :pic (nth theUser 4) :password (nth theUser 5) :source (nth theUser 6) :confirmed (nth theUser 7)  :name (nth theUser 8)})
-  )
-  
-
-  ;;(.log js/console (nth theUser 0))
-  ;;(.log js/console (:login (:user @tripcore/app-state) ))
-  (if (= (nth theUser 0) (:email (:user @socialcore/app-state) ))
-    (let []
-      (swap! socialcore/app-state assoc-in [:user :role] (nth theUser 1) )
-      (swap! socialcore/app-state assoc-in [:user :id] (nth theUser 3) )
-      (swap! socialcore/app-state assoc-in [:user :email] (nth theUser 0))
-      (swap! socialcore/app-state assoc-in [:user :locked] (nth theUser 2))
-      (swap! socialcore/app-state assoc-in [:selecteduser] (nth theUser 3))
-    )
-  )
-)
-
-
-(defn OnGetUser [response]
-  (let [
-    
-    ]
-    (doall (map setUser response))
-    (reqzones)
-  )
-)
-
-
-(defn requser []
-  (GET (str settings/apipath "api/user") {
-    :handler OnGetUser
-    :error-handler error-handler
-    :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @socialcore/app-state))) }
-  })
-)
 
 (defn onLoginSuccess [response]
   (
@@ -170,7 +115,7 @@
         (swap! socialcore/app-state assoc-in [:token] newdata )
         (swap! socialcore/app-state assoc-in [:view] 1 )
         (swap! socialcore/app-state assoc-in [:users] [] )        
-        (requser)
+        (socialcore/load-users 0)
       )
       (setLoginError {:error error})
     )
@@ -363,7 +308,7 @@
      :error-handler onLoginError
      :headers {}
      :format :json
-     :params {:id id :from from :picture (.-picture js/window)} 
+     :params {:id id :from from :picture (.-picture js/window) :name (.-username js/window)} 
     }
   )
 )

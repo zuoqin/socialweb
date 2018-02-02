@@ -49,6 +49,7 @@
     (str (:info info))
   ) 
 
+
   ;;(.log js/console (str  "In setLoginError" (:error error) ))
   (jquery
     (fn []
@@ -59,10 +60,73 @@
   )
 )
 
+(defn error-handler [{:keys [status status-text]}]
+  (.log js/console (str "something bad happened: " status " " status-text))
+)
+
+
 (defn handleChange [e]
   (swap! app-state assoc-in [(keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
 )
 
+
+(defn map-zone [zone]
+  {:id (get zone 0) :name (get zone 1) :city (get zone 2) :diff (get zone 3)}
+)
+
+(defn OnGetZones [response]
+  (swap! app-state assoc-in [(keyword (str (:id (:user @app-state)))) :zones] (map map-zone response))
+  (set! (.-display (.-style (.getElementById js/document "socialbuttons"))) "none")
+  (aset js/window "location" "#/users")
+)
+
+
+(defn reqzones []
+  (GET (str settings/apipath "api/zone?id=" (:id (:user @app-state ))) {:handler OnGetZones
+      :error-handler error-handler
+      :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @app-state))) }
+    }
+  )
+)
+
+
+(defn setUser [theUser]
+  (let [cnt (count (:users @app-state))]
+    (swap! app-state assoc-in [:users cnt] {:role (nth theUser 1)  :email (nth theUser 0) :locked (nth theUser 2) :id (nth theUser 3) :pic (nth theUser 4) :password (nth theUser 5) :source (nth theUser 6) :confirmed (nth theUser 7)  :name (nth theUser 8)})
+  )
+  
+
+  ;;(.log js/console (nth theUser 0))
+  ;;(.log js/console (:login (:user @tripcore/app-state) ))
+  (if (= (nth theUser 0) (:email (:user @app-state) ))
+    (let []
+      (swap! app-state assoc-in [:user :role] (nth theUser 1) )
+      (swap! app-state assoc-in [:user :id] (nth theUser 3) )
+      (swap! app-state assoc-in [:user :email] (nth theUser 0))
+      (swap! app-state assoc-in [:user :locked] (nth theUser 2))
+      (swap! app-state assoc-in [:selecteduser] (nth theUser 3))
+    )
+  )
+)
+
+
+(defn OnGetUser [response]
+  (let [
+    
+    ]
+    (doall (map setUser response))
+    (reqzones)
+  )
+)
+
+
+(defn load-users [page]
+  (GET (str settings/apipath "api/users?page=" page) {
+    :handler OnGetUser
+    :error-handler error-handler
+    :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @app-state))) }
+  })
+)
 
 
 (defn onVersionInfo []
@@ -199,17 +263,17 @@
   (.print js/window)
 )
 
-(defn map-zone [zone]
-  {:id (get zone 0) :name (get zone 1) :city (get zone 2) :diff (get zone 3)}
-)
+;; (defn map-zone [zone]
+;;   {:id (get zone 0) :name (get zone 1) :city (get zone 2) :diff (get zone 3)}
+;; )
 
-(defn OnGetZones [response]
-   (swap! app-state assoc-in [(keyword (:selecteduser @app-state)) :zones] (map map-zone response))
-)
+;; (defn OnGetZones [response]
+;;    (swap! app-state assoc-in [(keyword (:selecteduser @app-state)) :zones] (map map-zone response))
+;; )
 
-(defn error-handler [{:keys [status status-text]}]
-  (.log js/console (str "something bad happened: " status " " status-text))
-)
+;; (defn error-handler [{:keys [status status-text]}]
+;;   (.log js/console (str "something bad happened: " status " " status-text))
+;; )
 
 (defn getZones [] 
   (GET (str settings/apipath "api/zone?id=" (:selecteduser @app-state) ) {
@@ -268,8 +332,8 @@
           )
         )
         (dom/div {:className "collapse navbar-collapse navbar-ex1-collapse" :id "menu"}
-          (dom/ul {:className "nav navbar-nav" :style {:padding-top "17px" :visibility (if (= (:current @app-state) "Zones") "visible" "hidden")}}
-            (dom/li
+          (dom/ul {:className "nav navbar-nav" :style {:padding-top "17px"}}
+            (dom/li {:style {:visibility (if (= (:current @app-state) "Zones") "visible" "hidden")}}
               ;; (dom/a (assoc style :href "#/eportal")
               ;;   (dom/span {:className "glyphicon glyphicon-home"})
               ;;     "Trips block"
@@ -285,14 +349,13 @@
                 )
               )
             )
-              (dom/li
-                (dom/h5 {:style {:margin-left "5px" :margin-right "5px" :height "32px" :margin-top "1px"}} " "
-        (dom/input {:id "search" :type "text" :placeholder "Search" :style {:height "32px" :margin-top "1px"} :value  (:search @app-state) :onChange (fn [e] (handleChange e )) })  )
-              )
-
-              (dom/li {:style {:margin-left "5px"}}
-                (b/button {:className "btn btn-info"  :onClick (fn [e] (printMonth))  } "Print zones")
-              )
+            (dom/li {:style {:display (if (or (= (:current @app-state) "Zones") (= (:current @app-state) "Users")) "block" "none")}}
+              (dom/h5 {:style {:margin-left "5px" :margin-right "5px" :height "32px" :margin-top "1px"}} " "
+      (dom/input {:id "search" :type "text" :placeholder "Search" :style {:height "32px" :margin-top "1px"} :value  (:search @app-state) :onChange (fn [e] (handleChange e )) })  )
+            )
+            (dom/li {:style {:margin-left "5px" :display (if (or (= (:current @app-state) "Zones") (= (:current @app-state) "Zones")) "block" "none")}}
+              (b/button {:className "btn btn-info"  :onClick (fn [e] (printMonth))  } "Print zones")
+            )
           )
          
           (dom/ul {:className "nav navbar-nav navbar-right"}

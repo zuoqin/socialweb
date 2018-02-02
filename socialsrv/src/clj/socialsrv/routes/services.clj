@@ -29,10 +29,11 @@
       :form-params [grant_type :- String, username :- String, password :- String]
       :summary  "login/password with form-parameters"
       (ok (case (dbservices/checkUser username password) 
+            4 {:error "Email is not confirmed"}
             3 {:access_token (-> (dbservices/claim username) jwt to-str) :expires_in 99999 :token_type "bearer"}
-            2 {:error "incorrect password"}
-            1 {:error "user is locked"}
-            0 {:error "user does not exist"}
+            2 {:error "Incorrect password"}
+            1 {:error "User is locked, ask administrator to unlock"}
+            0 {:error "User does not exist"}
             ""
          )
       )
@@ -41,9 +42,9 @@
 
    (POST "/socialtoken" []
       ;:return String
-      :body-params [id :- String, from :- String, picture :- String]
+      :body-params [id :- String, from :- String, picture :- String, name :- String]
       :summary  "data from social network"
-      (ok (let [] (dbservices/checkSocialUser id from picture) 
+      (ok (let [] (dbservices/checkSocialUser id from picture name)
             {:access_token (-> (dbservices/claim id) jwt to-str) :expires_in 99999 :token_type "bearer"}
         )
       )
@@ -107,10 +108,16 @@
   (context "/api" []
     :tags ["user"]
 
-
-
-
     (GET "/user" []
+      :header-params [authorization :- String]
+      :query-params [id :- Long]
+      :summary      "retrieve user"
+
+      (ok  (userapi/get-user-by-id (nth (str/split authorization #" ") 1) id))
+    )
+
+
+    (GET "/users" []
       :header-params [authorization :- String]
       :query-params [{page :- Long 0} ]
       :summary      "retrieve all users for current login"
@@ -142,7 +149,12 @@
     (OPTIONS "/user" []
       :summary  "Allows OPTIONS requests"
       (ok "")
-    )    
+    )
+
+    (OPTIONS "/users" []
+      :summary  "Allows OPTIONS requests"
+      (ok "")
+    )
   )
 
 

@@ -14,6 +14,17 @@
 ))
 
 
+(defn get-user-by-id [token id]
+  (let [
+    usercode (:iss (-> token str->jwt :claims)  ) 
+    result (db/get-user-by-id id)         
+    ]
+    ;(println (str "usercode=" usercode) )
+    result
+  )
+)
+
+
 (defn getUsers [token page]
   (let [
     usercode (:iss (-> token str->jwt :claims)  ) 
@@ -29,27 +40,30 @@
     id (db/create-user "" email password "user" false "" false)
     tr1 (println (str "email=" email "; id=" id))
     msg (str  "
-                                        <html>
-                                          <head>
-                                          </head>
-                                          <body>
-                                            <h1>Welcome to Time Zones manager!</h1>
-                                            <p>
-To activate your account, please, follow this
-                                              <a href=\"http://devstat.aytm.com:3000/api/register?id=" id "\">
-link
-                                              </a>
-                                            </p>
-                                          </body>
-                                        </html>"
-                                        )
+      <html>
+        <head>
+        </head>
+        <body>
+          <h1>Welcome to Time Zones manager!</h1>
+          <p>
+            To activate your account, please, follow this
+            <a href=\"http://devstat.aytm.com:3000/api/register?id=" id "\">
+  link
+            </a>
+          </p>
+          <p>
+            This is an automated email, don't reply to it.
+          </p>
+        </body>
+      </html>"
+    )
     result (if (> id 0)
       (postal/send-message {:host "mail.smtp2go.com"
                                 :port 2525
                                 :tls true
                                 :user "zuoqin"
                                 :pass "@Qwerty123"}
-                               {:from "admin@timezones.com"
+                               {:from "noreply@timezones.com"
                                 :to email
                                 :subject "Account activation"
                                 :body [{:type "text/html; charset=utf-8"
@@ -78,6 +92,9 @@ link
   link
             </a> to register.
           </p>
+          <p>
+            This is an automated email, don't reply to it.
+          </p>
         </body>
       </html>"
       )
@@ -86,7 +103,7 @@ link
                                     :tls true
                                     :user "zuoqin"
                                     :pass "@Qwerty123"}
-                                   {:from "admin@timezones.com"
+                                   {:from "noreply@timezones.com"
                                     :to email
                                     :subject "Your invitation to Time Zones Manager"
                                     :body [{:type "text/html; charset=utf-8"

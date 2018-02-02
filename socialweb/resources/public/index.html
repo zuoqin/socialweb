@@ -212,6 +212,7 @@
    var google_profile = null;
    function onSignIn(googleUser) {
      google_profile = googleUser.getBasicProfile();
+     username = google_profile.getName();
      console.log('ID: ' + google_profile.getId()); // Do not send to your backend! Use an ID token instead.
      console.log('Name: ' + google_profile.getName());
      console.log('Image URL: ' + google_profile.getImageUrl());

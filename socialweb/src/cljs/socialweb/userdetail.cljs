@@ -458,8 +458,9 @@
     (swap! app-state assoc-in [:role ]  "user" ) 
     (swap! app-state assoc-in [:password] "" )
     (swap! app-state assoc-in [:name] "" )
+    (swap! app-state assoc-in [:email] "" )
     (swap! app-state assoc-in [:id] nil )
-    (swap! app-state assoc-in [:picture] "" )
+    (swap! app-state assoc-in [:pic] "" )
     (swap! app-state assoc-in [:locked] false )
 
 

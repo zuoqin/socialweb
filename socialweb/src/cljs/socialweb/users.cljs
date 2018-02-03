@@ -98,10 +98,11 @@
 
 (defn OnInviteSuccess [response]
   (let [ 
+      res (get response (keyword "result"))
     ]
     (swap! socialcore/app-state assoc-in [:state] 0)
-    (swap! socialcore/app-state assoc-in [:modalTitle] "Send invitation success")
-    (swap! socialcore/app-state assoc-in [:modalText] (str "Invitation sent to " (:email @socialcore/app-state)))
+    (swap! socialcore/app-state assoc-in [:modalTitle] (if (= "messages sent" res) "Send invitation success" "Send invitation"))
+    (swap! socialcore/app-state assoc-in [:modalText] (if (= "messages sent" res) (str "Invitation sent to " (:email @socialcore/app-state)) res))
     (-> (jquery "#inviteModal .close")
           (.click)
     )

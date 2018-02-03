@@ -8,7 +8,7 @@
 
 (defn get-user-by-id [id]
   (let [
-    users (d/q '[:find ?email ?role ?locked ?p ?pwd ?c ?s ?n
+    users (d/q '[:find ?eid ?email ?role ?locked ?p ?pwd ?c ?s ?n
                   :in $ ?eid 
                   :where
                   [?eid :user/email ?email]
@@ -18,7 +18,7 @@
                   [(get-else $ ?eid :user/password "") ?pwd]
                   [(get-else $ ?eid :user/confirmed false) ?c]
                   [(get-else $ ?eid :user/source "site") ?s]
-                  [(get-else $ ?eid :user/name false) ?n]
+                  [(get-else $ ?eid :user/name "") ?n]
                   [?eid]
                 ]
                 (d/db conn) id)
@@ -46,15 +46,17 @@
 
 
 (defn find-user [email]
-  (let [users (d/q '[:find ?email ?r
+  (let [users (d/q '[:find ?email ?r ?pwd ?name
                       :in $ ?email
                       :where
                       [?u :user/email ?email]
+                      [(get-else $ ?u :user/password "") ?pwd]
+                      [(get-else $ ?u :user/name "") ?name]
                       [?u :user/role ?r]
                      ]
                      (d/db conn) email)
     ]
-    (if (not= users #{} ) (first users)  ["" ""]) 
+    (if (not= users #{} ) (first users)  ["" "" "" ""]) 
   )
 )
 
@@ -63,13 +65,12 @@
         user (find-user email)
 
         users (if ( = (nth user 1) "user" ) 
-                (d/q '[:find ?email ?role ?locked ?u ?p ?pwd ?s ?c ?n
+                (d/q '[:find ?email ?role ?locked ?u ?pwd ?s ?c ?n
                                :in $ ?email
                                :where
                                [?u :user/email ?email]
                                [?u :user/role ?role]
                                [(get-else $ ?u :user/locked false) ?locked]
-                               [(get-else $ ?u :user/picture "") ?p]
                                [(get-else $ ?u :user/password "") ?pwd]
                                [(get-else $ ?u :user/confirmed false) ?c]
                                [(get-else $ ?u :user/source false) ?s]
@@ -79,12 +80,12 @@
                 (if (or ( = (nth user 1)  "admin" )  
                         ( = (nth user 1)  "manager" )
                         )
-                  (take 5 (drop (* page 5) (sort-by first (d/q '[:find ?email ?role ?locked ?u ?p ?pwd ?s ?c ?n
+                  (take 5 (drop (* page 5) (sort-by first (d/q '[:find ?email ?role ?locked ?u ?pwd ?s ?c ?n
                   :where
                   [?u :user/email ?email]
                   [?u :user/role ?role]
                   [(get-else $ ?u :user/locked false) ?locked]
-                  [(get-else $ ?u :user/picture "") ?p]
+                  ;[(get-else $ ?u :user/picture "") ?p]
                   [(get-else $ ?u :user/password "") ?pwd]
                   [(get-else $ ?u :user/confirmed false) ?c]
                   [(get-else $ ?u :user/source "site") ?s]
@@ -124,7 +125,7 @@
 (defn create-user [name email password role locked picture confirmed]
   (let [
     ]
-    (if (= ["" ""] (find-user email))
+    (if (= ["" "" "" ""] (find-user email))
       (let [res (d/transact
           conn
           [{:db/id #db/id[:db.part/user -1000001] :user/name name :user/email email :user/password password :user/role role :user/locked false :user/logcnt 0 :user/source "" :user/confirmed confirmed}]

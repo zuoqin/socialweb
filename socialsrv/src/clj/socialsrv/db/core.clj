@@ -36,9 +36,11 @@
     (map #(-> % first e d/touch) results)))
 
 (defn create-user [id from picture name]
-  (d/transact
+  (let [res (d/transact
    conn
    [{:db/id #db/id[:db.part/user -1000001] :user/email id :user/password id :user/locked false :user/confirmed true :user/role "user" :user/source from :user/name name :user/picture (str "data:image/jpeg;base64," picture)}]
+  )]
+   (second (first (:tempids @res)))
   )
 )
 
@@ -78,7 +80,7 @@
        }
       ]
     )
-    ;(first users)
+    cnt
   )
 )
 
@@ -106,7 +108,7 @@
 
 
 (defn find-user-by-email [email]
-  (let [users (d/q '[:find ?email ?l ?c
+  (let [users (d/q '[:find ?email ?l ?c ?u
                       :in $ ?email
                       :where
                       [?u :user/email ?email]

@@ -27,6 +27,7 @@
       (let []
         (db/create-user id from picture name)
       )
+      (first user)
     )
   )
 )
@@ -37,26 +38,26 @@
        user (db/find-user-by-email login)
        locked (nth user 1)
        confirmed (nth user 2)
+       id (nth user 3)
     ]
     (if (nil? user)
-      0
+      {:result 0 :info 1}
       (if (= true locked)
         1
         (if (= false confirmed)
-          4
+          {:result 4 :info 1}
           (let [
             user (first (db/find-user login password))
             ]
             (if (nil? user)
               (let [
-                   ;tr1  (print user)
+                   cnt  (db/increment-lock login)
                 ]
-                (db/increment-lock login)
-                2
+                {:result 2 :info cnt}
               )
               (let []
                 (db/unlock-user login)
-                3
+                {:result 3 :info id}
               )
             )
           )

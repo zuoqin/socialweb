@@ -119,7 +119,6 @@
     :handler OnUpdateZoneSuccess
     :error-handler OnUpdateZoneError
     :headers {
-      :content-type "application/json" 
       :Authorization (str "Bearer "  (:token (:token @socialcore/app-state)))}
     :format :json
     :params {:id (:zoneid @app-state)  :city (:city @app-state) :name (:name @app-state) :diff (js/parseFloat (:diff @app-state))}})

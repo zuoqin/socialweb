@@ -87,17 +87,17 @@
 
 (defn OnCreateUserSuccess [response]
   (let [msg (get response (keyword "result"))]
-    
+    (if (= msg "messages sent") (swap! app-state assoc-in [:success] true))
+
+
     (setLoginError (if (= msg "messages sent") "Registration succeeded" "Registration failed") (if (= msg "messages sent") "Check your email to confirm address" msg))
     ;(.log js/console msg)
-    (-> js/document
-      .-location
-      (set! "#/login"))
   )
 )
 
 (defn doregister [username password]
   (swap! app-state assoc-in [:state] 1)
+  (swap! app-state assoc-in [:success] false)
   (POST (str settings/apipath  "api/register") {
     :handler OnCreateUserSuccess
     :error-handler OnCreateUserError
@@ -139,7 +139,7 @@
                    (dom/p (:modalText @app-state))
                    )
           (dom/div {:className "modal-footer"}
-                   (b/button {:type "button" :className "btn btn-default" :data-dismiss "modal"} "Close")
+                   (b/button {:type "button" :className "btn btn-default" :data-dismiss "modal" :onClick (fn [e] (if (= true (:success @app-state)) (-> js/document .-location (set! "#/login"))))} "Close")
           )
         )
       )

@@ -28,14 +28,17 @@
       ;:return String
       :form-params [grant_type :- String, username :- String, password :- String]
       :summary  "login/password with form-parameters"
-      (ok (case (dbservices/checkUser username password) 
-            4 {:error "Email is not confirmed"}
-            3 {:access_token (-> (dbservices/claim username) jwt to-str) :expires_in 99999 :token_type "bearer"}
-            2 {:error "Incorrect password"}
-            1 {:error "User is locked, ask administrator to unlock"}
-            0 {:error "User does not exist"}
-            ""
-         )
+      (ok (let [result(dbservices/checkUser username password) ]
+
+        (case (:result result)
+          4 {:error "Email is not confirmed"}
+          3 {:access_token (-> (dbservices/claim username) jwt to-str) :expires_in 99999 :token_type "bearer" :id (:info result)}
+          2 {:error (str "Incorrect password, user will be locked after another " (:info result) " incorrect input" (if (> (:info result) 1) "s" ""))}
+          1 {:error "User is locked, ask administrator to unlock"}
+          0 {:error "User does not exist"}
+          ""
+          )
+        ) 
       )
     )
 
@@ -44,8 +47,8 @@
       ;:return String
       :body-params [id :- String, from :- String, picture :- String, name :- String]
       :summary  "data from social network"
-      (ok (let [] (dbservices/checkSocialUser id from picture name)
-            {:access_token (-> (dbservices/claim id) jwt to-str) :expires_in 99999 :token_type "bearer"}
+      (ok (let [result (dbservices/checkSocialUser id from picture name)] 
+            {:access_token (-> (dbservices/claim id) jwt to-str) :expires_in 99999 :token_type "bearer" :id result}
         )
       )
     )
@@ -64,6 +67,16 @@
       :body-params [email :- String, password :- String]
       :summary  "Register into time zones"
       (ok (let [res (userapi/registerUser email password)]
+            {:result res}
+        )
+      )
+    )
+
+   (PUT "/register" []
+      ;:return String
+      :body-params [email :- String]
+      :summary  "Send user password"
+      (ok (let [res (userapi/sendUserInfo email)]
             {:result res}
         )
       )

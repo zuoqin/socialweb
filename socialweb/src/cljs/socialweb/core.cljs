@@ -75,9 +75,9 @@
 )
 
 (defn OnGetZones [response]
-  (swap! app-state assoc-in [(keyword (str (:id (:user @app-state)))) :zones] (map map-zone response))
+  (swap! app-state assoc-in [(keyword (str (:selecteduser @app-state))) :zones] (map map-zone response))
   (set! (.-display (.-style (.getElementById js/document "socialbuttons"))) "none")
-  (aset js/window "location" "#/users")
+  (aset js/window "location" "#/zones")
 )
 
 
@@ -92,29 +92,19 @@
 
 (defn setUser [theUser]
   (let [cnt (count (:users @app-state))]
-    (swap! app-state assoc-in [:users cnt] {:role (nth theUser 1)  :email (nth theUser 0) :locked (nth theUser 2) :id (nth theUser 3) :pic (nth theUser 4) :password (nth theUser 5) :source (nth theUser 6) :confirmed (nth theUser 7)  :name (nth theUser 8)})
-  )
-  
-
-  ;;(.log js/console (nth theUser 0))
-  ;;(.log js/console (:login (:user @tripcore/app-state) ))
-  (if (= (nth theUser 0) (:email (:user @app-state) ))
-    (let []
-      (swap! app-state assoc-in [:user :role] (nth theUser 1) )
-      (swap! app-state assoc-in [:user :id] (nth theUser 3) )
-      (swap! app-state assoc-in [:user :email] (nth theUser 0))
-      (swap! app-state assoc-in [:user :locked] (nth theUser 2))
-      (swap! app-state assoc-in [:selecteduser] (nth theUser 3))
-    )
+    (swap! app-state assoc-in [:users cnt] {:role (nth theUser 1)  :email (nth theUser 0) :locked (nth theUser 2) :id (nth theUser 3) :pic "" :password (nth theUser 4) :source (nth theUser 5) :confirmed (nth theUser 6)  :name (nth theUser 7)})
   )
 )
 
 
-(defn OnGetUser [response]
+(defn OnGetUsers [response]
   (let [
     
     ]
     (doall (map setUser response))
+    (if (= (count (filter (fn [x] (if (= (:id x) (:selecteduser @app-state)) true false)) (:users @app-state))) 0) 
+      (swap! app-state assoc-in [:users] (conj (:users @app-state) (:user @app-state)))
+    )
     (reqzones)
   )
 )
@@ -122,6 +112,35 @@
 
 (defn load-users [page]
   (GET (str settings/apipath "api/users?page=" page) {
+    :handler OnGetUsers
+    :error-handler error-handler
+    :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @app-state))) }
+  })
+)
+
+
+(defn OnGetUser [response]
+  (let [
+    
+    ]
+    (swap! app-state assoc-in [:user :id] (nth response 0) )
+    (swap! app-state assoc-in [:user :email] (nth response 1))
+    (swap! app-state assoc-in [:user :role] (nth response 2) )
+    (swap! app-state assoc-in [:user :locked] (nth response 3))
+    (swap! app-state assoc-in [:user :pic] (nth response 4))
+    (swap! app-state assoc-in [:user :password] (nth response 5))
+    (swap! app-state assoc-in [:user :confirmed] (nth response 6))
+    (swap! app-state assoc-in [:user :source] (nth response 7))
+    (swap! app-state assoc-in [:user :name] (nth response 8))
+    (swap! app-state assoc-in [:selecteduser] (:id (:token @app-state)))
+  ;;(.log js/console (nth theUser 0))
+  ;;(.log js/console (:login (:user @tripcore/app-state) ))
+    (load-users 0)
+  )
+)
+
+(defn get-user [id]
+  (GET (str settings/apipath "api/user?id=" id) {
     :handler OnGetUser
     :error-handler error-handler
     :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @app-state))) }
@@ -306,8 +325,8 @@
 (defn buildUsersList [data owner]
   (map
     (fn [text]
-      (dom/option {:key (:id text) :value (:id text)
-                    :onChange #(handle-change % owner)} (:email text))
+      (dom/option {:key (:id text) :data-subtext (:email text) :value (:id text)
+                    :onChange #(handle-change % owner)} (:name text))
     )
     (sort (comp comp-users) (:users @app-state )) 
   )
@@ -351,7 +370,7 @@
             )
             (dom/li {:style {:display (if (or (= (:current @app-state) "Zones") (= (:current @app-state) "Users")) "block" "none")}}
               (dom/h5 {:style {:margin-left "5px" :margin-right "5px" :height "32px" :margin-top "1px"}} " "
-      (dom/input {:id "search" :type "text" :placeholder "Search" :style {:height "32px" :margin-top "1px"} :value  (:search @app-state) :onChange (fn [e] (handleChange e )) })  )
+              (dom/input {:id "search" :type "text" :placeholder "Search" :style {:height "32px" :margin-top "1px"} :value  (:search @app-state) :onChange (fn [e] (handleChange e )) }))
             )
             (dom/li {:style {:margin-left "5px" :display (if (or (= (:current @app-state) "Zones") (= (:current @app-state) "Zones")) "block" "none")}}
               (b/button {:className "btn btn-info"  :onClick (fn [e] (printMonth))  } "Print zones")

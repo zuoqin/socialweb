@@ -77,9 +77,53 @@
   )
 )
 
+(defn sendUserInfo [email]
+  (let [
+    user (db/find-user email) 
+    ;tr1 (println (str "email=" email "; id=" id))
+    msg (str  "
+      <html>
+        <head>
+        </head>
+        <body>
+          <h1>Dear " (nth user 3) "</h1>
+          <p>
+            Welcome to Time Zones manager!
+          </p>
+          <p>
+            Your password for Time Zones Manager: " (nth user 2) "
+          </p>
+          <p>
+            This is an automated email, don't reply to it.
+          </p>
+        </body>
+      </html>"
+    )
+    result (if (= "" (nth user 0))
+      {:message "User does not exist"}
+      (postal/send-message {:host "mail.smtp2go.com"
+                                :port 2525
+                                :tls true
+                                :user "zuoqin"
+                                :pass "@Qwerty123"}
+                               {:from "noreply@timezones.com"
+                                :to email
+                                :subject "Password reminder"
+                                :body [{:type "text/html; charset=utf-8"
+                 :content msg}]
+                               }
+      )
+      
+      )
+    ]
+    (if (= "messages sent" (:message result)) (str "Password has been sent to " email) (:message result))
+  )
+)
+
 
 (defn inviteUser [email]
   (let [
+    user (db/find-user email) 
     msg (str  "
       <html>
         <head>
@@ -98,7 +142,8 @@
         </body>
       </html>"
       )
-    result (try (postal/send-message {:host "mail.smtp2go.com"
+    result (if (= "" (nth user 0))
+       (try (postal/send-message {:host "mail.smtp2go.com"
                                     :port 2525
                                     :tls true
                                     :user "zuoqin"
@@ -111,7 +156,8 @@
                                     }
                                    )
         (catch Exception e {:message (str "Error sending email to: " email)}))
-        
+        {:message (str email " already exists")}
+      ) 
     ]
     (:message result)
   )

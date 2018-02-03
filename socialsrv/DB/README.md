@@ -10,8 +10,6 @@ https://www.youtube.com/watch?v=kd1yTmx7m2A
 http://docs.datomic.com/run-transactor.html
 
 bin\transactor config\samples\dev-transactor-template.properties
-Starting datomic:dev://localhost:4334/<DB-NAME>, storing data in: data ...
-System started datomic:dev://localhost:4334/<DB-NAME>, storing data in: data
 
 
 ## Starting Clojure REPL

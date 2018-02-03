@@ -28,6 +28,11 @@
 (def ch (chan (dropping-buffer 2)))
 (defonce app-state (atom  {:email "" :name "" :locked false :password "" :roles [{:name "admin"} {:name "manager"} {:name "user"}] :isinsert false :role "admin" :view 1 :current "User Detail"} ))
 
+(defn error-handler [{:keys [status status-text]}]
+  (.log js/console (str "something bad happened: " status " " status-text))
+)
+
+
 (defn handleChange [e]
   ;(.log js/console e  )  
   ;(.log js/console "The change ....")
@@ -185,7 +190,7 @@
     (jquery
       (fn []
          (-> (jquery (str "#chckconfr"))
-           (.bootstrapToggle (clj->js {:on "Confirmed" :off "Not confirmed"}))
+           (.bootstrapToggle (clj->js {:on "email confirmed" :off "email not confirmed"}))
          )
       )
     )
@@ -249,6 +254,32 @@
   )
 )
 
+
+(defn OnGetUser [response]
+  (let [
+    
+    ]
+    (swap! app-state assoc-in [:id] (nth response 0) )
+    (swap! app-state assoc-in [:email] (nth response 1))
+    (swap! app-state assoc-in [:role] (nth response 2) )
+    (swap! app-state assoc-in [:locked] (nth response 3))
+    (swap! app-state assoc-in [:pic] (nth response 4))
+    (swap! app-state assoc-in [:password] (nth response 5))
+    (swap! app-state assoc-in [:confirmed] (nth response 6))
+    (swap! app-state assoc-in [:source] (nth response 7))
+    (swap! app-state assoc-in [:name] (nth response 8))
+  )
+)
+
+
+(defn get-user [id]
+  (GET (str settings/apipath "api/user?id=" id) {
+    :handler OnGetUser
+    :error-handler error-handler
+    :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @socialcore/app-state))) }
+  })
+)
+
 (defn setUser []
   (let [
         users (:users @socialcore/app-state)
@@ -262,6 +293,9 @@
     (swap! app-state assoc-in [:email] (:email user) )
     (swap! app-state assoc-in [:pic] (:pic user) )
     (swap! app-state assoc-in [:locked] (:locked user) )
+    (if (= "" (:pic user))
+      (get-user (:id user))
+    )
   )
 )
 
@@ -299,7 +333,7 @@
 
 
 (defn onMount [data]
-  (swap! app-state assoc-in [:current] 
+  (swap! socialcore/app-state assoc-in [:current] 
     "User Detail"
   )
   (getUserDetail)
@@ -365,37 +399,42 @@
             (dom/div  (assoc styleprimary  :className "panel panel-default"  :id "divUserInfo")
               
               (dom/div {:className "panel-heading"}
-                (dom/h5 "name: "
-                  (dom/input {:id "name" :type "text" :onChange (fn [e] (handleChange e)) :value (:name @app-state)})
-                )
-
-                (dom/h5 "email: "
-                  (dom/input {:id "email" :type "email" :onChange (fn [e] (handleChange e)) :value (:email @app-state)})
-                )
-
-                (dom/h5 "Password: "
-                  (dom/input {:id "password" :type "password" :onChange (fn [e] (handleChange e)) :value (:password @app-state)})
-                )
-
-
-                (dom/div {:className "form-group"}
-                  (dom/p
-                    (dom/label {:className "control-label" :for "roles" }
-                      "Role: "
-                    )
-                  
+                (dom/div {:className "row"}
+                  (dom/div {:className "col-md-1"} "Name:")
+                  (dom/div {:className "col-md-2"}
+                    (dom/input {:id "name" :type "text" :onChange (fn [e] (handleChange e)) :value (:name @app-state)})
                   )
-                 
-                  (omdom/select #js {:id "roles"
+                )
+                                    
+                (dom/div {:className "row"}
+                  (dom/div {:className "col-md-1"} (if (= (:source @app-state) "site") "email: " "ID: "))
+                  (dom/div {:className "col-md-2"}
+                    (dom/input {:id "email" :type "email" :readOnly (if (= (:source @app-state) "site") false true)  :onChange (fn [e] (handleChange e)) :value (:email @app-state)}))
+                ) 
+                
+                (dom/div {:className "row"}
+                  (dom/div {:className "col-md-1"}
+                    (dom/h5 "Password: ")
+                  )
+                  (dom/div {:className "col-md-2"}
+                    (dom/input {:id "password" :type "password" :readOnly (if (= (:source @app-state) "site") false true) :onChange (fn [e] (handleChange e)) :value (:password @app-state)})
+                  )
+                )
+
+                (dom/div {:className "row"}
+                  (dom/div {:className "col-md-1" } "Role: ")
+                  (dom/div {:className "col-md-2"}
+                    (omdom/select #js {:id "roles"
                                      :className "selectpicker"
                                      :data-show-subtext "true"
                                      :data-live-search "true"
                                      :onChange #(handle-change % owner)
                                      }                
-                    (buildRolesList data owner)
+                      (buildRolesList data owner)
+                    )
                   )
-                  
                 )
+
 
                 (dom/div {:className "row"}
                   (dom/label {:className "checkbox-inline"}

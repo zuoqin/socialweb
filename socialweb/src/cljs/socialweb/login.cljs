@@ -19,7 +19,7 @@
             [cljs-time.coerce :as te]
             [cljs-time.local :as tl]
             [socialweb.localstorage :as ls]
-            [ajax.core :refer [GET POST]]
+            [ajax.core :refer [GET POST PUT]]
             [om-bootstrap.input :as i]
             [om-bootstrap.button :as b]
             [om-bootstrap.panel :as p]
@@ -51,7 +51,12 @@
 
 (def ch (chan (dropping-buffer 2)))
 (def jquery (js* "$"))
-(defonce app-state (atom  {:error "" :modalText "Modal Text" :modalTitle "Modal Title" :state 0} ))
+(defonce app-state (atom  {:error "" :username "zuoqin@mail.ru" :password "Qwerty123" :modalText "Modal Text" :modalTitle "Modal Title" :state 0} ))
+
+
+(defn handleChange [e]
+  (swap! app-state assoc-in [(keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
+)
 
 
 (defn setLoginError [error]
@@ -104,7 +109,7 @@
   (
     let [     
       error (get response (keyword "error"))
-      newdata {:token (get response (keyword "access_token"))  :expires (get response (keyword "expires_in") ) }
+      newdata {:token (get response (keyword "access_token"))  :expires (get response (keyword "expires_in") ) :id (get response (keyword "id"))}
     ]
     (swap! app-state assoc-in [:state] 0)
     (.log js/console (str "error: " error))
@@ -114,8 +119,8 @@
       (let []
         (swap! socialcore/app-state assoc-in [:token] newdata )
         (swap! socialcore/app-state assoc-in [:view] 1 )
-        (swap! socialcore/app-state assoc-in [:users] [] )        
-        (socialcore/load-users 0)
+        (swap! socialcore/app-state assoc-in [:users] [] )
+        (socialcore/get-user (get response (keyword "id")))
       )
       (setLoginError {:error error})
     )
@@ -133,13 +138,58 @@
   ;;(.log js/console (str  (get (first response)  "Title") ))
 )
 
-(defn dologin [username password]
+(defn onSendInfo [response]
+  (let [text (get response (keyword "result"))]
+
+    (swap! app-state assoc-in [:modalTitle] 
+      (str "Send password")
+    ) 
+
+    (swap! app-state assoc-in [:modalText] 
+      text
+    ) 
+
+    (swap! app-state assoc-in [:state] 0)
+
+    ;;(.log js/console (str  "In setLoginError" (:error error) ))
+    (jquery
+      (fn []
+        (-> (jquery "#loginModal")
+          (.modal)
+        )
+      )
+    )
+  )
+)
+
+
+(defn senduserinfo []
+  (let [
+
+    ]
+    (swap! app-state assoc-in [:state] 1)
+
+    (PUT (str settings/apipath "api/register")
+      {:handler onSendInfo
+       :error-handler onLoginError
+       :headers {}
+       :format :json
+       :params {:email (:username @app-state)}
+      })
+
+    ;(swap! app-state assoc-in [:state] 0)
+    ;(aset js/window "location" "#/zones")
+    
+  )
+)
+
+(defn dologin []
   (let [
 
     ]
     (swap! app-state assoc-in [:state] 1)
     ;; currently logged in user
-    (swap! socialcore/app-state assoc-in [:user :email] username)
+    (swap! socialcore/app-state assoc-in [:user :email] (:username @app-state))
 
     ;; currently selected user
 
@@ -148,7 +198,7 @@
       {:handler OnLogin
        :error-handler onLoginError
        :headers {:content-type "application/x-www-form-urlencoded"}
-       :body (str "grant_type=password&username=" username "&password=" password) 
+       :body (str "grant_type=password&username=" (:username @app-state) "&password=" (:password @app-state)) 
       })
 
     ;(swap! app-state assoc-in [:state] 0)
@@ -160,17 +210,17 @@
 
 
 
-(defn checklogin [owner e]
+(defn checklogin [e]
   (let [
-    theusername (-> (om/get-node owner "txtUserName") .-value)
-    thepassword (-> (om/get-node owner "txtPassword") .-value)
+    ;theusername (-> (om/get-node owner "txtUserName") .-value)
+    ;thepassword (-> (om/get-node owner "txtPassword") .-value)
     ]
     (.preventDefault (.. e -nativeEvent))
     (.stopPropagation (.. e -nativeEvent))
     (.stopImmediatePropagation (.. e -nativeEvent))
     ;(aset js/window "location" "http://localhost:3449/#/something")
     ;(.log js/console (str "user=" theusername " password=" thepassword))
-    (dologin (str theusername) (str thepassword)) 
+    (dologin) 
   )
 )
 
@@ -225,22 +275,33 @@
       ;(dom/h1 "Login Page")
       ;(dom/img {:src "images/LogonBack.jpg" :className "img-responsive company-logo-logon"})
       (dom/form {:className "form-signin"}
-        (dom/input #js {:type "text" :ref "txtUserName"
-           :defaultValue  settings/demouser  :className "form-control" :placeholder "User Name" } )
-        (dom/input {:className "form-control" :ref "txtPassword" :id "txtPassword" :defaultValue settings/demopassword :type "password"  :placeholder "Password"} )
-        (dom/button #js {
-          :className (if (= (:state @app-state) 0) "btn btn-lg btn-primary btn-block" "btn btn-lg btn-primary btn-block m-progress" )  :type "button" :onClick (fn [e](checklogin owner e))} "Login")
+        (dom/input {:type "email" :id "username" :ref "txtUserName" :value (:username @app-state) :className "form-control" :placeholder "User Name" :onChange (fn [e] (handleChange e ))} )
+        (dom/input {:className "form-control" :id "password" :value (:password @app-state) :type "password"  :placeholder "Password"} )
+        (dom/div {:className "row" :style {:margin-bottom "15px"}}
+          (dom/div {:className "col-md-6"}
+            (dom/button {:className (if (= (:state @app-state) 0) "btn btn-lg btn-primary btn-block" "btn btn-lg btn-primary btn-block m-progress") :style {:font-size "medium"} :type "button" :onClick (fn [e](checklogin e))} "Login")
 
 
-        (dom/button #js {
-          :className (if (= (:state @app-state) 0) "btn btn-lg btn-primary btn-block" "btn btn-lg btn-primary btn-block m-progress" )  :type "button"  :onClick (fn [e] (-> js/document
-      .-location
-      (set! "#/registration")))} "Register")
+          )
+
+          (dom/div {:className "col-md-6"}
+            (dom/button { :className (if (= (:state @app-state) 0) "btn btn-lg btn-primary btn-block" "btn btn-lg btn-primary btn-block m-progress") :style {:font-size "medium" :padding-left "3px" :padding-right "0px"} :type "button" :onClick (fn [e](senduserinfo))} "Forgot password")
+          )
+        )
+
+
+
+        (dom/button {:className "btn btn-lg btn-primary btn-block" :disabled (if (= (:state @app-state) 0) false true) :style {:font-size "medium"} :type "button"  :onClick (fn [e] (-> js/document  .-location  (set! "#/registration")))} "Register")
+
+        (dom/div {:style {:text-align "center" :margin-top "40px" :font-size "large" :font-weight "700"}}
+          (dom/p {:style {:text-align "center" :margin-top "40px" :font-size "large" :font-weight "700"}} "OR")
+          (dom/p {:style {:text-align "center" :margin-top "40px" :font-size "large" :font-weight "700"}} "Login using" )
+        )
         
         ;(dom/div {:className "g-signin2" :data-onsuccess "onSignIn"})
       )
       (addModal)
-      (dom/div {:style {:margin-bottom "100px"}})
+      (dom/div {:style {:margin-bottom "20px"}})
     )
   )
 )

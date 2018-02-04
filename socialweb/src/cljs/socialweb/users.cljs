@@ -28,7 +28,7 @@
 
 (defn comp-users
   [user1 user2]
-  (if (> (compare (:email user1) (:user user2)) 0)
+  (if (> (compare (:email user1) (:email user2)) 0)
       false
       true
   )
@@ -237,14 +237,14 @@
       (dom/div
         (om/build socialcore/website-view socialcore/app-state {})
         (dom/div {:className "row" :style {:margin-top "70px" :margin-left "5px"}}
-          (dom/button {:className "btn btn-primary" :style {} :onClick (fn [e] (-> js/document .-location (set! "#/userdetail")))} "Add New")
+          (dom/button {:className "btn btn-primary no-print" :style {} :onClick (fn [e] (-> js/document .-location (set! "#/userdetail")))} "Add New")
 
           (if (or (= (:role (:user @socialcore/app-state)) "admin") (= (:role (:user @socialcore/app-state)) "admin"))
-            (dom/button {:className "btn btn-primary" :style {:margin-left "15px"} :onClick (fn [e] (show-modal-invite))} "Invite")
+            (dom/button {:className "btn btn-primary no-print" :style {:margin-left "15px"} :onClick (fn [e] (show-modal-invite))} "Invite")
           )
 
           (if (or (= (:role (:user @socialcore/app-state)) "admin") (= (:role (:user @socialcore/app-state)) "manager"))
-            (dom/button {:className "btn btn-primary" :disabled (:nomoreusers @data) :style {:margin-left "15px"} :onClick (fn [e] (socialcore/load-users -1))} "Get all users")
+            (dom/button {:className "btn btn-primary no-print" :disabled (:nomoreusers @data) :style {:margin-left "15px"} :onClick (fn [e] (socialcore/load-users -1))} "Get all users")
           )
         )
         (dom/div {:className "panel panel-primary" :style {:margin-left "5px" :margin-top "5px"}}

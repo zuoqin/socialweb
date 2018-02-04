@@ -68,7 +68,7 @@
             )
           )
         )                  
-        ) (sort (comp comp-zones) (filter (fn [x] (if (or (> (.indexOf (str/lower-case (:name x)) (str/lower-case (:search @socialcore/app-state))) -1) (> (.indexOf (str/lower-case (:city x)) (str/lower-case (:search @socialcore/app-state))) -1)) true false)) (:zones ((keyword (str (:selecteduser @data))) @data))))
+        ) (sort (comp comp-zones) (filter (fn [x] (if (or (> (.indexOf (str/lower-case (:name x)) (str/lower-case (:search @socialcore/app-state))) -1) (> (.indexOf (str/lower-case (:city x)) (str/lower-case (:search @socialcore/app-state))) -1)) true false)) (:zones ((keyword (str (:id (:selecteduser @data)))) @data))))
       )
     )
   )
@@ -76,7 +76,7 @@
 
 (defn onMount [data]
   (swap! socialcore/app-state assoc-in [:current] "Zones")
-  (if (= (count (:zones ((keyword (str (:selecteduser @data))) @data))) 0)
+  (if (= (count (:zones ((keyword (str (:id (:selecteduser @data)))) @data))) 0)
     (socialcore/reqzones)
   )
   (put! ch 42)
@@ -115,7 +115,7 @@
       (dom/div
         (om/build socialcore/website-view socialcore/app-state {})
         (dom/div { :style {:margin-top "70px" :margin-left "5px"}}
-          (dom/button {:className "btn btn-primary" :onClick (fn [e] (-> js/document
+          (dom/button {:className "btn btn-primary no-print" :onClick (fn [e] (-> js/document
         .-location
         (set! "#/zonedetail/0")))} "Add New")
         )

@@ -164,7 +164,7 @@
 )
 
 
-(defn createUser [token name email password role locked pic]
+(defn createUser [token name email password role locked pic confirmed]
   (let [
     usercode (:iss (-> token str->jwt :claims)  ) 
     ;;; TO-DO: add check authorization to add 
@@ -172,7 +172,7 @@
     result {:res "Success"}
     ]
     
-    {:id (db/create-user name email password role locked pic true)}
+    {:id (db/create-user name email password role locked pic confirmed)}
     ;; TO-DO Add check successfull
 ;    result
   )

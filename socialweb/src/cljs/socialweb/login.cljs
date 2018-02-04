@@ -51,7 +51,7 @@
 
 (def ch (chan (dropping-buffer 2)))
 (def jquery (js* "$"))
-(defonce app-state (atom  { :error "" :username "zorchenkov@gmail.com" :password "111" :modalText "Modal Text" :modalTitle "Modal Title" :state 0} ))
+(defonce app-state (atom  { :error "" :username "zuoqin@mail.ru" :password "Qwerty123" :modalText "Modal Text" :modalTitle "Modal Title" :state 0} ))
 
 
 (defn handleChange [e]
@@ -167,7 +167,8 @@
         (swap! socialcore/app-state assoc-in [:token] newdata )
         (swap! socialcore/app-state assoc-in [:view] 1 )
         (swap! socialcore/app-state assoc-in [:users] [] )
-        (swap! socialcore/app-state assoc-in [:selecteduser] (get response (keyword "id")))
+        (swap! socialcore/app-state assoc-in [:selecteduser :id] (get response (keyword "id"))
+        )
         (get-user (get response (keyword "id")))
       )
       (setLoginError {:error error})

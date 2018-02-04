@@ -45,19 +45,19 @@
 
 (defn check-zone-valid []
   (let [
-     diff (js/parseFloat (:diff @app-state))
+     diff (js/parseFloat (:diff (:selectedzone @socialcore/app-state)))
   ]
-    (if (and (> (count (:city @app-state)) 0) (> (count (:name @app-state)) 0) (<= diff 14) (>= diff -12)) true false)
+    (if (and (> (count (:city (:selectedzone @socialcore/app-state))) 0) (> (count (:name (:selectedzone @socialcore/app-state))) 0) (<= diff 14) (>= diff -12)) true false)
   )
 )
 
 (defn OnDeleteZoneSuccess [response]
   (let [
-      zones (:zones ((keyword (str (:selecteduser @socialcore/app-state))) @socialcore/app-state))
-      newzones (remove (fn [zone] (if (= (:id zone) (:id @app-state) ) true false)) zones)
+      zones (:zones ((keyword (str (:id (:selecteduser @socialcore/app-state)))) @socialcore/app-state))
+      newzones (remove (fn [zone] (if (= (:id zone) (:id (:selectedzone @socialcore/app-state)) ) true false)) zones)
     ]
 
-    (swap! socialcore/app-state assoc-in [(keyword (str (:selecteduser @socialcore/app-state)) ) :zones] newzones)
+    (swap! socialcore/app-state assoc-in [(keyword (str (:id (:selecteduser @socialcore/app-state))) ) :zones] newzones)
 
     (js/window.history.back)
   )
@@ -78,11 +78,11 @@
 
 (defn OnUpdateZoneSuccess [response]
   (let [
-      zones (:zones ((keyword (str (:selecteduser @socialcore/app-state)) ) @socialcore/app-state))
-      newzones (remove (fn [zone] (if (= (:id zone) (:id @app-state) ) true false  )) zones)
-      addzones (into [] (conj newzones {:id (:id @app-state) :name (:name @app-state) :city (:city @app-state) :diff (js/parseFloat (:diff @app-state))})) 
+      zones (:zones ((keyword (str (:id (:selecteduser @socialcore/app-state))) ) @socialcore/app-state))
+      newzones (remove (fn [zone] (if (= (:id zone) (:id (:selectedzone @socialcore/app-state)) ) true false  )) zones)
+      addzones (into [] (conj newzones {:id (:id (:selectedzone @socialcore/app-state)) :name (:name (:selectedzone @socialcore/app-state)) :city (:city (:selectedzone @socialcore/app-state)) :diff (js/parseFloat (:diff (:selectedzone @socialcore/app-state)))})) 
     ]
-    (swap! socialcore/app-state assoc-in [(keyword (str (:selecteduser @socialcore/app-state))) :zones] addzones)
+    (swap! socialcore/app-state assoc-in [(keyword (str (:id (:selecteduser @socialcore/app-state)))) :zones] addzones)
     (js/window.history.back)
   )
 )
@@ -103,7 +103,7 @@
 (defn OnCreateZoneSuccess [response]
   (let [
       zones (:zones ((keyword (str (:selecteduser @socialcore/app-state))) @socialcore/app-state))  
-      addzones (into [] (conj zones {:id (get response (keyword "id")) :name (:name @app-state) :city (:city @app-state) :diff (js/parseFloat (:diff @app-state)) })) 
+      addzones (into [] (conj zones {:id (get response (keyword "id")) :name (:name (:selectedzone @socialcore/app-state)) :city (:city (:selectedzone @socialcore/app-state)) :diff (js/parseFloat (:diff (:selectedzone @socialcore/app-state))) })) 
     ]
     (swap! socialcore/app-state assoc-in [(keyword (str (:selecteduser @socialcore/app-state)) ) :zones] addzones)
     (js/window.history.back)
@@ -129,7 +129,7 @@
     :headers {
       :Authorization (str "Bearer "  (:token (:token @socialcore/app-state)))}
     :format :json
-    :params {:id (:id @app-state)  :city (:city @app-state) :name (:name @app-state) :diff (js/parseFloat (:diff @app-state))}})
+    :params {:id (:id (:selectedzone @socialcore/app-state))  :city (:city (:selectedzone @socialcore/app-state)) :name (:name (:selectedzone @socialcore/app-state)) :diff (js/parseFloat (:diff (:selectedzone @socialcore/app-state)))}})
 )
 
 (defn createZone []
@@ -139,12 +139,12 @@
     :headers {
       :Authorization (str "Bearer "  (:token (:token @socialcore/app-state)))}
     :format :json
-    :params { :user (js/parseInt (:selecteduser @socialcore/app-state)) :name (:name @app-state) :city (:city @app-state) :diff (js/parseFloat (:diff @app-state))}})
+    :params { :user (js/parseInt (:id (:selecteduser @socialcore/app-state))) :name (:name (:selectedzone @socialcore/app-state)) :city (:city (:selectedzone @socialcore/app-state)) :diff (js/parseFloat (:diff (:selectedzone @socialcore/app-state)))}})
 )
 
-(defn setNewZoneValue [key val]
-  (swap! app-state assoc-in [(keyword key)] val)
-)
+;; (defn setNewZoneValue [key val]
+;;   (swap! app-state assoc-in [(keyword key)] val)
+;; )
 
 
 (defn setcontrols []
@@ -173,15 +173,15 @@
 
 
 (defn setZoneNullValues []
-  (swap! app-state assoc-in [:diff] 0)
-  (swap! app-state assoc-in [:city] "" )
-  (swap! app-state assoc-in [:name ] "")
+  (swap! socialcore/app-state assoc-in [:selectedzone :diff] 0)
+  (swap! socialcore/app-state assoc-in [:selectedzone :city] "" )
+  (swap! socialcore/app-state assoc-in [:selectedzone :name ] "")
 )
 
 (defn setZone []
   (let [
         login (:selecteduser @socialcore/app-state)
-        zone (first (filter (fn [zone] (if (= (:id @app-state) (:id zone)) true false)) (:zones ( (keyword (str (:selecteduser @socialcore/app-state))) @socialcore/app-state) )))  ]
+        zone (first (filter (fn [zone] (if (= (:id (:selectedzone @socialcore/app-state)) (:id zone)) true false)) (:zones ( (keyword (str (:id (:selecteduser @socialcore/app-state)))) @socialcore/app-state) )))  ]
 
        ;(.log js/console "the zone")
        ;(.log js/console zone)
@@ -189,9 +189,9 @@
        (if (= zone nil)
          (setZoneNullValues)
          (let []
-           (swap! app-state assoc-in [:diff] (:diff zone))
-           (swap! app-state assoc-in [:name] (:name zone))
-           (swap! app-state assoc-in [:city] (:city zone))
+           (swap! socialcore/app-state assoc-in [:selectedzone :diff] (:diff zone))
+           (swap! socialcore/app-state assoc-in [:selectedzone :name] (:name zone))
+           (swap! socialcore/app-state assoc-in [:selectedzone :city] (:city zone))
          )
        )
     )
@@ -228,7 +228,7 @@
 (defn handleChange [e]
   ;(.log js/console e  )  
   ;(.log js/console "The change ....")
-  (swap! app-state assoc-in [(keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
+  (swap! socialcore/app-state assoc-in [:selectedzone (keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
 )
 
 
@@ -254,8 +254,8 @@
       styleprimary {:style {:margin-top "70px"}}
       ]
       (dom/div
-        ;(om/build tripcore/website-view data {})
-        (dom/div {:className "panel panel-default"}
+        (om/build socialcore/website-view data {})
+        (dom/div {:className "panel panel-default" :style {:margin-top "65px"}}
           (dom/div {:className "panel-heading"}
             (dom/div {:className "panel-title"} 
               (dom/div {:className "row"}
@@ -263,8 +263,8 @@
                   "Name:"
                 )
                 (dom/div {:className "col-md-2"}
-                  (dom/input {:id "name" :type "text" :style {:width "100%"} :value  (:name @app-state) :onChange (fn [e] (handleChange e)) }))
-              (if (< (count (:name @app-state)) 1)
+                  (dom/input {:id "name" :type "text" :style {:width "100%"} :value  (:name (:selectedzone @socialcore/app-state)) :onChange (fn [e] (handleChange e)) }))
+              (if (< (count (:name (:selectedzone @socialcore/app-state))) 1)
                 (dom/div {:style {:color "red" :margin-top "5px"}}
                   "Name should not be empty"
                 )
@@ -278,9 +278,9 @@
                 "City:"
               )            
               (dom/div {:className "col-md-2"}
-                (dom/input {:id "city" :type "text" :style {:width "100%"} :value (:city @app-state) :onChange (fn [e] (handleChange e))})
+                (dom/input {:id "city" :type "text" :style {:width "100%"} :value (:city (:selectedzone @socialcore/app-state)) :onChange (fn [e] (handleChange e))})
               )
-              (if (< (count (:city @app-state)) 1)
+              (if (< (count (:city (:selectedzone @socialcore/app-state))) 1)
                 (dom/div {:style {:color "red" :margin-top "5px"}}
                   "City should not be empty"
                 )
@@ -292,9 +292,9 @@
                 "Difference:"
               )            
               (dom/div {:className "col-md-2"}
-                (dom/input {:id "diff" :type "text" :value (:diff @app-state) :onChange (fn [e] (handleChange e))})
+                (dom/input {:id "diff" :type "number" :step "0.5" :style {:width "100%"} :value (:diff (:selectedzone @socialcore/app-state)) :onChange (fn [e] (handleChange e))})
               )
-              (if (or (> (js/parseFloat (:diff @app-state)) 14) (< (js/parseFloat (:diff @app-state)) -12))
+              (if (or (> (js/parseFloat (:diff (:selectedzone @socialcore/app-state))) 14) (< (js/parseFloat (:diff (:selectedzone @socialcore/app-state))) -12))
                 (dom/div {:style {:color "red" :margin-top "5px"}}
                   "Difference to GMT should be in [-12 +14] range"
                 )
@@ -304,9 +304,9 @@
         )
         (dom/nav {:className "navbar navbar-default" :role "navigation"}
           (dom/div {:className "navbar-header"}
-            (dom/button {:className "btn btn-default" :disabled (not (check-zone-valid) ) :onClick (fn [e] (if (= (:id @app-state) 0) (createZone) (updateZone)) )} (if (= (:id @app-state) 0) "Insert" "Update") )
+            (dom/button {:className "btn btn-default" :disabled (not (check-zone-valid) ) :onClick (fn [e] (if (= (:id (:selectedzone @socialcore/app-state)) 0) (createZone) (updateZone)) )} (if (= (:id (:selectedzone @socialcore/app-state)) 0) "Insert" "Update") )
 
-            (b/button {:className "btn btn-danger" :style {:visibility (if (= (:id @app-state) 0) "hidden" "visible")} :onClick (fn [e] (deleteZone (:id @app-state)))} "Delete")
+            (b/button {:className "btn btn-danger" :style {:visibility (if (= (:id (:selectedzone @socialcore/app-state)) 0) "hidden" "visible")} :onClick (fn [e] (deleteZone (:id (:selectedzone @socialcore/app-state))))} "Delete")
 
             (b/button {:className "btn btn-info"  :onClick (fn [e]     (js/window.history.back))  } "Cancel")
           )
@@ -323,9 +323,9 @@
     zoneid id
     ]
     (.log js/console id)
-    (swap! app-state assoc-in [:id]  (js/parseInt id) ) 
+    (swap! socialcore/app-state assoc-in [:selectedzone :id]  (js/parseInt id) ) 
     (om/root zonedetail-page-view
-             app-state
+             socialcore/app-state
              {:target (. js/document (getElementById "app"))})
   )
 )

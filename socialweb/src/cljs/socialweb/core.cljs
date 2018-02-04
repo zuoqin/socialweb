@@ -28,7 +28,7 @@
 (def ch (chan (dropping-buffer 2)))
 
 
-(defonce app-state (atom {:email "" :userspage 0 :nomoreusers false :selecteduser "" :search "" :users [] :view 1}))
+(defonce app-state (atom {:email "" :userspage 0 :nomoreusers false :selecteduser {} :search "" :users [] :view 1}))
 
 
 ;{:id 1 :name "Masha" :email "masha@gmail.com"} {:id 2 :name "Petya" :email "petya@gmail.com"} {:id 3 :name "Sanya" :email "sanya@gmail.com"}
@@ -91,13 +91,13 @@
 )
 
 (defn OnGetZones [response]
-  (swap! app-state assoc-in [(keyword (str (:selecteduser @app-state))) :zones] (map map-zone response))
+  (swap! app-state assoc-in [(keyword (str (:id (:selecteduser @app-state)))) :zones] (map map-zone response))
   (aset js/window "location" "#/zones")
 )
 
 
 (defn reqzones []
-  (GET (str settings/apipath "api/zone?id=" (:id (:user @app-state ))) {:handler OnGetZones
+  (GET (str settings/apipath "api/zone?id=" (:id (:selecteduser @app-state ))) {:handler OnGetZones
       :error-handler error-handler
       :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @app-state))) }
     }
@@ -123,7 +123,7 @@
         )
       ))) response)
     )
-    (if (= (count (filter (fn [x] (if (= (:id x) (:selecteduser @app-state)) true false)) (:users @app-state))) 0)
+    (if (= (count (filter (fn [x] (if (= (:id x) (:id (:user @app-state))) true false)) (:users @app-state))) 0)
       (swap! app-state assoc-in [:users] (conj (:users @app-state) (:user @app-state)))
     )
     (if (< (count response) 5) 
@@ -161,7 +161,7 @@
     ;; (swap! app-state assoc-in [:user :confirmed] (nth response 6))
     ;; (swap! app-state assoc-in [:user :source] (nth response 7))
     ;; (swap! app-state assoc-in [:user :name] (nth response 8))
-    (swap! app-state assoc-in [:selecteduser] (:id (:token @app-state)))
+    (swap! app-state assoc-in [:selecteduser :id] (:id (:token @app-state)))
   ;;(.log js/console (nth theUser 0))
   ;;(.log js/console (:login (:user @tripcore/app-state) ))
     ;(load-users (:userspage @app-state))
@@ -324,7 +324,7 @@
 ;; )
 
 (defn getZones [] 
-  (GET (str settings/apipath "api/zone?id=" (:selecteduser @app-state) ) {
+  (GET (str settings/apipath "api/zone?id=" (:id (:selecteduser @app-state)) ) {
     :handler OnGetZones
     :error-handler error-handler
     :headers {
@@ -334,7 +334,7 @@
 )
 
 (defn onDropDownChange [id value]
-  (swap! app-state assoc-in [:selecteduser] value)
+  (swap! app-state assoc-in [:selecteduser :id] value)
 
   
   (if (nil? (:zones ((keyword value) @app-state)))
@@ -355,7 +355,7 @@
   (map
     (fn [text]
       (dom/option {:key (:id text) :data-subtext (:email text) :value (:id text)
-                    :onChange #(handle-change % owner)} (:name text))
+                    :onChange #(handle-change % owner)} (str (:name text) (if (or (= (:source text) "site") (= (:source text) "")) "" (str " (" (:source text) ")"))) )
     )
     (sort (comp comp-users) (:users @app-state )) 
   )
@@ -397,9 +397,8 @@
                 )
               )
             )
-            (dom/li {:style {:display (if (or (= (:current @app-state) "Zones") (= (:current @app-state) "Users")) "block" "none")}}
-              (dom/h5 {:style {:margin-left "5px" :margin-right "5px" :height "32px" :margin-top "1px"}} " "
-              (dom/input {:id "search" :type "text" :placeholder "Search" :style {:height "32px" :margin-top "1px"} :value  (:search @app-state) :onChange (fn [e] (handleChange e )) }))
+            (dom/li {:style {:display (if (or (= (:current @data) "Zones") (= (:current @data) "Users")) "block" "none")}}
+              (dom/input {:id "search" :type "text" :placeholder "search" :style {:height "32px" :margin-top "1px"} :value  (:search @app-state) :onChange (fn [e] (handleChange e )) })
             )
             (dom/li {:style {:margin-left "5px" :display (if (or (= (:current @app-state) "Zones") (= (:current @app-state) "Zones")) "block" "none")}}
               (b/button {:className "btn btn-info"  :onClick (fn [e] (printMonth))  } "Print zones")
@@ -453,7 +452,7 @@
    (jquery
      (fn []
        (-> (jquery "#users" )
-         (.selectpicker "val" (:selecteduser @app-state)
+         (.selectpicker "val" (:id (:selecteduser @app-state))
                           )
          (.on "change"
            (fn [e]

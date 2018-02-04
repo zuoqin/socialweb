@@ -141,9 +141,9 @@
     (POST "/user" []
       ;;:return      Long
       :header-params [authorization :- String]
-      :body-params [email :- String, password :- String, role :- String, pic :- String, locked :- Boolean]
+      :body-params [name :- String, email :- String, password :- String, role :- String, pic :- String, locked :- Boolean, confirmed :- Boolean]
       :summary     "Create new user"
-      (ok (userapi/createUser (nth (str/split authorization #" ") 1) email password role locked pic)))
+      (ok (userapi/createUser (nth (str/split authorization #" ") 1) name email password role locked pic confirmed)))
 
     (DELETE "/user" []
       ;;:return      Long

@@ -36,11 +36,11 @@
 (defn handleChange [e]
   ;(.log js/console e  )  
   ;(.log js/console "The change ....")
-  (swap! app-state assoc-in [(keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
+  (swap! socialcore/app-state assoc-in [:selecteduser (keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
 )
 
 (defn check-user-validity []
-  (if (or (< (count (:name @app-state)) 1) (< (count (:email @app-state)) 1) (< (count (:password @app-state)) 8) (< (count (:role @app-state)) 1)) false true)
+  (if (or (< (count (:name (:selecteduser @socialcore/app-state))) 1) (< (count (:email (:selecteduser @socialcore/app-state))) 1) (< (count (:password (:selecteduser @socialcore/app-state))) 8) (< (count (:role (:selecteduser @socialcore/app-state))) 1)) false true)
 )
 
 (defn OnDeleteUserError [response]
@@ -57,7 +57,7 @@
 (defn OnDeleteUserSuccess [response]
   (let [
       users (:users @socialcore/app-state    )  
-      newusers (remove (fn [user] (if (= (:id user) (:id @app-state) ) true false  )) users)
+      newusers (remove (fn [user] (if (= (:id user) (:id (:selecteduser @socialcore/app-state)) ) true false  )) users)
     ]
     (swap! socialcore/app-state assoc-in [:users] newusers)
   )
@@ -78,8 +78,8 @@
 (defn OnUpdateUserSuccess [response]
   (let [
       users (:users @socialcore/app-state)
-      deluser (remove (fn [user] (if (= (:id user) (:id @app-state) ) true false  )) users)
-      adduser (into [] (conj deluser {:id (:id @app-state) :locked (:locked @app-state) :email (:email @app-state) :password (:password @app-state) :role (:role @app-state) :pic (.-src (.getElementById js/document "userpic")) :name (:name @app-state) :confirmed (:confirmed @app-state) :source (:source @app-state)})) 
+      deluser (remove (fn [user] (if (= (:id user) (:id (:selecteduser @socialcore/app-state)) ) true false  )) users)
+      adduser (into [] (conj deluser {:id (:id (:selecteduser @socialcore/app-state)) :locked (:locked (:selecteduser @socialcore/app-state)) :email (:email (:selecteduser @socialcore/app-state)) :password (:password (:selecteduser @socialcore/app-state)) :role (:role (:selecteduser @socialcore/app-state)) :pic (.-src (.getElementById js/document "userpic")) :name (:name (:selecteduser @socialcore/app-state)) :confirmed (:confirmed (:selecteduser @socialcore/app-state)) :source (:source (:selecteduser @socialcore/app-state))})) 
     ]
     (swap! socialcore/app-state assoc-in [:users] adduser)
     (js/window.history.back)
@@ -107,7 +107,7 @@
       :content-type "application/json" 
       :Authorization (str "Bearer "  (:token (:token @socialcore/app-state)))}
     :format :json
-    :params {:name (if (nil? (:name @app-state)) "" (:name @app-state)) :email (:email @app-state) :password (:password @app-state) :role (:role @app-state) :locked (:locked @app-state) :pic (:pic @app-state) :id (:id @app-state)}})
+    :params {:name (if (nil? (:name (:selecteduser @socialcore/app-state))) "" (:name (:selecteduser @socialcore/app-state))) :email (:email (:selecteduser @socialcore/app-state)) :password (:password (:selecteduser @socialcore/app-state)) :role (:role (:selecteduser @socialcore/app-state)) :locked (:locked (:selecteduser @socialcore/app-state)) :pic (:pic (:selecteduser @socialcore/app-state)) :id (:id (:selecteduser @socialcore/app-state))}})
 )
 
 
@@ -124,10 +124,11 @@
 
 (defn OnCreateUserSuccess [response]
   (let [
-      users (:users @socialcore/app-state    )  
-      adduser (into [] (conj users {:login (:login @app-state) :password (:password @app-state) :role (:role @app-state)} )) 
+      users (:users @socialcore/app-state)
+      adduser (into [] (conj users {:id (get response (keyword "id")) :name (:name (:selecteduser @socialcore/app-state)) :email (:email (:selecteduser @socialcore/app-state)) :locked (:locked (:selecteduser @socialcore/app-state)) :confirmed (:confirmed (:selecteduser @socialcore/app-state)) :source "site" :pic (.-src (.getElementById js/document "userpic")) :password (:password (:selecteduser @socialcore/app-state)) :role (:role (:selecteduser @socialcore/app-state))} )) 
     ]
     (swap! socialcore/app-state assoc-in [:users] adduser)
+    (swap! socialcore/app-state assoc-in [:selecteduser :id] (get response (keyword "id")))
     (js/window.history.back)
   )
 )
@@ -140,7 +141,7 @@
       :content-type "application/json" 
       :Authorization (str "Bearer "  (:token (:token @socialcore/app-state)))}
     :format :json
-    :params { :name (:name @app-state) :email (:email @app-state) :password (:password @app-state) :role (:role @app-state) :locked (:locked @app-state) :pic (:pic @app-state)}})
+    :params { :name (:name (:selecteduser @socialcore/app-state)) :email (:email (:selecteduser @socialcore/app-state)) :password (:password (:selecteduser @socialcore/app-state)) :role (:role (:selecteduser @socialcore/app-state)) :confirmed (:confirmed (:selecteduser @socialcore/app-state)) :locked (:locked (:selecteduser @socialcore/app-state)) :pic (:pic (:selecteduser @socialcore/app-state))}})
 )
 
 
@@ -161,7 +162,7 @@
    (jquery
      (fn []
        (-> (jquery "#roles" )
-         (.selectpicker "val" (:role @app-state))
+         (.selectpicker "val" (:role (:selecteduser @socialcore/app-state)))
          (.on "change"
            (fn [e]
              (
@@ -174,10 +175,6 @@
    )
 )
 
-
-(defn setNewUserValue [key val]
-  (swap! app-state assoc-in [(keyword key)] val)
-)
 
 (defn setcheckboxtoggle []
   (let []
@@ -210,7 +207,7 @@
                 ]
                 (.stopPropagation e)
                 ;(.stopImmediatePropagation (.. e -nativeEvent) )
-                (swap! app-state assoc-in [:locked] islocked)
+                (swap! socialcore/app-state assoc-in [:selecteduser :locked] islocked)
               )
             )
           )
@@ -262,15 +259,15 @@
   (let [
     
     ]
-    (swap! app-state assoc-in [:id] (nth response 0) )
-    (swap! app-state assoc-in [:email] (nth response 1))
-    (swap! app-state assoc-in [:role] (nth response 2) )
-    (swap! app-state assoc-in [:locked] (nth response 3))
-    (swap! app-state assoc-in [:pic] (nth response 4))
-    (swap! app-state assoc-in [:password] (nth response 5))
-    (swap! app-state assoc-in [:confirmed] (nth response 6))
-    (swap! app-state assoc-in [:source] (nth response 7))
-    (swap! app-state assoc-in [:name] (nth response 8))
+    (swap! socialcore/app-state assoc-in [:selecteduser :id] (nth response 0) )
+    (swap! socialcore/app-state assoc-in [:selecteduser :email] (nth response 1))
+    (swap! socialcore/app-state assoc-in [:selecteduser :role] (nth response 2) )
+    (swap! socialcore/app-state assoc-in [:selecteduser :locked] (nth response 3))
+    (swap! socialcore/app-state assoc-in [:selecteduser :pic] (nth response 4))
+    (swap! socialcore/app-state assoc-in [:selecteduser :password] (nth response 5))
+    (swap! socialcore/app-state assoc-in [:selecteduser :confirmed] (nth response 6))
+    (swap! socialcore/app-state assoc-in [:selecteduser :source] (nth response 7))
+    (swap! socialcore/app-state assoc-in [:selecteduser :name] (nth response 8))
   )
 )
 
@@ -286,17 +283,17 @@
 (defn setUser []
   (let [
         users (:users @socialcore/app-state)
-        user (first (filter (fn [user] (if (= (:id @app-state) (:id user))  true false)) (:users @socialcore/app-state )))
+        user (first (filter (fn [user] (if (= (:id (:selecteduser @socialcore/app-state)) (:id user))  true false)) (:users @socialcore/app-state )))
         ]
-    (swap! app-state assoc-in [:id]  (:id user) ) 
-    (swap! app-state assoc-in [:role]  (:role user) ) 
-    (swap! app-state assoc-in [:source]  (:source user) ) 
-    (swap! app-state assoc-in [:name]  (:name user) ) 
-    (swap! app-state assoc-in [:password] (:password user))
-    (swap! app-state assoc-in [:confirmed] (:confirmed user))
-    (swap! app-state assoc-in [:email] (:email user) )
-    (swap! app-state assoc-in [:pic] (:pic user) )
-    (swap! app-state assoc-in [:locked] (:locked user) )
+    (swap! socialcore/app-state assoc-in [:selecteduser :id]  (:id user) ) 
+    (swap! socialcore/app-state assoc-in [:selecteduser :role]  (:role user) ) 
+    (swap! socialcore/app-state assoc-in [:selecteduser :source]  (:source user) ) 
+    (swap! socialcore/app-state assoc-in [:selecteduser :name]  (:name user) ) 
+    (swap! socialcore/app-state assoc-in [:selecteduser :password] (:password user))
+    (swap! socialcore/app-state assoc-in [:selecteduser :confirmed] (:confirmed user))
+    (swap! socialcore/app-state assoc-in [:selecteduser :email] (:email user) )
+    (swap! socialcore/app-state assoc-in [:selecteduser :pic] (:pic user) )
+    (swap! socialcore/app-state assoc-in [:selecteduser :locked] (:locked user) )
     (if (= "" (:pic user))
       (get-user (:id user))
     )
@@ -322,8 +319,9 @@
   ;(.log js/console (str "token: " " " (:token  (first (:token @t5pcore/app-state)))       ))
   (if
     (and 
-      (not= (:id @app-state) nil)
-      (not= (:id @app-state) "")
+      (not= (:id (:selecteduser @socialcore/app-state)) nil)
+      (not= (:id (:selecteduser @socialcore/app-state)) 0)
+      (not= (:id (:selecteduser @socialcore/app-state)) "")
     )
     (setUser)
   )
@@ -337,28 +335,27 @@
 
 
 (defn onMount [data]
-  (swap! socialcore/app-state assoc-in [:current] 
-    "User Detail"
-  )
+  (swap! socialcore/app-state assoc-in [:current] "User Detail")
   (getUserDetail)
   (put! ch 46)
   (put! ch 47)
 )
 
 
-(defn handle-change [e owner]
-  ;(.log js/console () e)
-  (swap! app-state assoc-in [:form (keyword (.. e -target -id))] 
-    (.. e -target -value)
-  ) 
-)
+;; (defn handle-change [e owner]
+;;   ;(.log js/console () e)
+;;   (swap! app-state assoc-in [:form (keyword (.. e -target -id))] 
+;;     (.. e -target -value)
+;;   ) 
+;; )
 
 
 (defn buildRolesList [data owner]
   (map
     (fn [text]
       (dom/option {:key (:name text) :value (:name text)
-                    :onChange #(handle-change % owner)} (:name text))
+                    ;:onChange #(handle-change % owner)
+} (:name text))
     )
     (:roles @app-state )
   )
@@ -374,7 +371,7 @@
       ]
       (set! (.-onload reader) (fn [e] 
         ;(.log js/console (.-result (.-target e)))
-        (swap! app-state assoc-in [:pic] (.-result (.-target e)))
+        (swap! socialcore/app-state assoc-in [:selecteduser :pic] (.-result (.-target e)))
       ))
       (.readAsDataURL reader (aget (.-files input) 0))
     )
@@ -406,21 +403,21 @@
                 (dom/div {:className "row"}
                   (dom/div {:className "col-md-1"} "Name:")
                   (dom/div {:className "col-md-2"}
-                    (dom/input {:id "name" :type "text" :onChange (fn [e] (handleChange e)) :value (:name @app-state)})
-                    (if (< (count (:name @app-state)) 1)
-                      (dom/div {:style {:color "red" :margin-top "5px"}}
-                      "name should not be empty"
-                      )
+                    (dom/input {:id "name" :type "text" :onChange (fn [e] (handleChange e)) :value (:name (:selecteduser @socialcore/app-state))})
+                  )
+                  (if (< (count (:name (:selecteduser @socialcore/app-state))) 1)
+                    (dom/div {:style {:color "red" :margin-top "5px"}}
+                    "name should not be empty"
                     )
                   )
                 )
                                     
                 (dom/div {:className "row"}
-                  (dom/div {:className "col-md-1"} (if (or (= (:source @app-state) "site") (= (:source @app-state) ""))  "email: " "ID: "))
+                  (dom/div {:className "col-md-1"} (if (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) ""))  "email: " "ID: "))
                   (dom/div {:className "col-md-2"}
-                    (dom/input {:id "email" :type "email" :readOnly (if (or (= (:source @app-state) "site") (= (:source @app-state) ""))  false true)  :onChange (fn [e] (handleChange e)) :value (:email @app-state)})
+                    (dom/input {:id "email" :type (if (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) "")) "email" "text") :readOnly (if (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) ""))  false true)  :onChange (fn [e] (handleChange e)) :value (:email (:selecteduser @socialcore/app-state))})
                   )
-                  (if (not (socialcore/valid-email (:email @app-state)))
+                  (if (and (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) "")) (not (socialcore/valid-email (:email (:selecteduser @socialcore/app-state)))))
                     (dom/div {:style {:color "red" :margin-top "5px"}}
                     "email should be valid address"
                     )
@@ -430,44 +427,48 @@
                 (dom/div {:className "row"}
                   (dom/div {:className "col-md-1"} "Password:")
                   (dom/div {:className "col-md-2"}
-                    (dom/input {:id "password" :type "password" :readOnly (if (or (= (:source @app-state) "site") (= (:source @app-state) "")) false true) :onChange (fn [e] (handleChange e)) :value (:password @app-state)})
+                    (dom/input {:id "password" :type "password" :readOnly (if (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) "")) false true) :onChange (fn [e] (handleChange e)) :value (:password (:selecteduser @socialcore/app-state))})
                   )
-                  (if (< (count (:password @app-state)) 8)
+                  (if (and (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) "")) (< (count (:password (:selecteduser @socialcore/app-state))) 8))
                     (dom/div { :style {:color "red" :margin-top "5px"}}
                     "password should be at least 8 characters long"
                     )
                   )
                 )
 
-                (dom/div {:className "row"}
-                  (dom/div {:className "col-md-1" } "Role: ")
-                  (dom/div {:className "col-md-2"}
-                    (omdom/select #js {:id "roles"
-                                     :className "selectpicker"
-                                     :data-show-subtext "true"
-                                     :data-live-search "true"
-                                     :onChange #(handle-change % owner)
-                                     }                
-                      (buildRolesList data owner)
+                (if (or (= (:role (:user @socialcore/app-state)) "admin") (= (:role (:user @socialcore/app-state)) "manager"))
+                  (dom/div
+                    (dom/div {:className "row"}
+                      (dom/div {:className "col-md-1" } "Role: ")
+                      (dom/div {:className "col-md-2"}
+                        (omdom/select #js {:id "roles"
+                                         :className "selectpicker"
+                                         :data-show-subtext "true"
+                                         :data-live-search "true"
+                                         ;:onChange #(handle-change % owner)
+                                         }                
+                          (buildRolesList data owner)
+                        )
+                      )
                     )
-                  )
-                )
 
 
-                (dom/div {:className "row"}
-                  (dom/div {:className "col-md-1"})
-                  (dom/div {:className "col-md-2"}
-                    (dom/label {:className "checkbox-inline"}
-                      (dom/input {:id (str "chckblock") :type "checkbox" :checked (:locked @data) :data-toggle "toggle" :data-size "large" :data-width "100" :data-height "26"})
+                    (dom/div {:className "row"}
+                      (dom/div {:className "col-md-1"})
+                      (dom/div {:className "col-md-2"}
+                        (dom/label {:className "checkbox-inline"}
+                          (dom/input {:id (str "chckblock") :type "checkbox" :checked (:locked (:selecteduser @data)) :data-toggle "toggle" :data-size "large" :data-width "100" :data-height "26"})
+                        )
+                      )
                     )
-                  )
-                )
 
-                (dom/div {:className "row" :style {:margin-top "5px"}}
-                  (dom/div {:className "col-md-1"})
-                  (dom/div {:className "col-md-2"}
-                    (dom/label {:className "checkbox-inline"}
-                      (dom/input {:id (str "chckconfr") :disabled true :type "checkbox" :checked (:confirmed @data) :data-toggle "toggle" :data-size "large" :data-width "200" :data-height "26"})
+                    (dom/div {:className "row" :style {:margin-top "5px"}}
+                      (dom/div {:className "col-md-1"})
+                      (dom/div {:className "col-md-2"}
+                        (dom/label {:className "checkbox-inline"}
+                          (dom/input {:id (str "chckconfr") :disabled true :type "checkbox" :checked (:confirmed (:selecteduser @data)) :data-toggle "toggle" :data-size "large" :data-width "200" :data-height "26"})
+                        )
+                      )
                     )
                   )
                 )
@@ -483,7 +484,7 @@
                   
                 )
                 (dom/div {:className "row"}
-                  (dom/img {:id "userpic" :style {:display (if (or (nil? (:pic @app-state)) (= "" (:pic @app-state))) "none" "block") :max-width "200px" :max-height "200px"} :src (:pic @app-state) :alt "User image"})
+                  (dom/img {:id "userpic" :style {:display (if (or (nil? (:pic (:selecteduser @socialcore/app-state))) (= "" (:pic (:selecteduser @socialcore/app-state)))) "none" "block") :max-width "200px" :max-height "200px"} :src (:pic (:selecteduser @socialcore/app-state)) :alt "User image"})
                 )
               )              
             )
@@ -491,8 +492,8 @@
         )
         (dom/nav {:className "navbar navbar-default" :role "navigation"}
           (dom/div {:className "navbar-header"}
-            (dom/button {:className "btn btn-default" :disabled (not (check-user-validity)) :onClick (fn [e] (if (= (:isinsert @app-state) true) (createUser) (updateUser)) )} (if (= (:isinsert @app-state) true) "Insert" "Update"))
-            (dom/button {:className "btn btn-danger" :style {:visibility (if (= (:isinsert @app-state) true) "hidden" "visible")} :onClick (fn [e] (deleteUser (:id @app-state)))} "Delete")
+            (dom/button {:className "btn btn-default" :disabled (or (not (socialcore/valid-email (:email (:selecteduser @socialcore/app-state)))) (not (check-user-validity))) :onClick (fn [e] (if (= (:id (:selecteduser @socialcore/app-state)) 0) (createUser) (updateUser)) )} (if (= (:id (:selecteduser @socialcore/app-state)) 0) "Insert" "Update"))
+            (dom/button {:className "btn btn-danger" :style {:visibility (if (= (:id (:selecteduser @socialcore/app-state)) 0) "hidden" "visible")} :onClick (fn [e] (deleteUser (:id (:selecteduser @socialcore/app-state))))} "Delete")
 
             (b/button {:className "btn btn-info"  :onClick (fn [e]     (js/window.history.back))} "Cancel")
           )
@@ -508,10 +509,10 @@
     user (first (filter (fn [x] (if (= (js/parseInt id) (:id x)) true false)) (:users @socialcore/app-state)))
     ;tr1 (.log js/console (str "id=" id "; user=" user))
     ]
-    (swap! app-state assoc-in [:id]  (:id user))
-    (swap! app-state assoc-in [:isinsert]  false )
+    (swap! socialcore/app-state assoc-in [:selecteduser :id]  (:id user))
+
     (om/root userdetail-page-view
-             app-state
+             socialcore/app-state
              {:target (. js/document (getElementById "app"))})
 
   )
@@ -519,23 +520,23 @@
 
 
 (sec/defroute newuserdetail-new-page "/userdetail" {}
-  (
-    (swap! app-state assoc-in [:login]  "" ) 
-    (swap! app-state assoc-in [:isinsert]  true )
+  (let []
+
+    (swap! socialcore/app-state assoc-in [:selecteduser :login]  "" ) 
  
-    (swap! app-state assoc-in [:role ]  "user" ) 
-    (swap! app-state assoc-in [:password] "" )
-    (swap! app-state assoc-in [:name] "" )
-    (swap! app-state assoc-in [:email] "" )
-    (swap! app-state assoc-in [:id] nil )
-    (swap! app-state assoc-in [:pic] "" )
-    (swap! app-state assoc-in [:source] "site" )
-    (swap! app-state assoc-in [:locked] false )
+    (swap! socialcore/app-state assoc-in [:selecteduser :role ]  "user" ) 
+    (swap! socialcore/app-state assoc-in [:selecteduser :password] "" )
+    (swap! socialcore/app-state assoc-in [:selecteduser :name] "" )
+    (swap! socialcore/app-state assoc-in [:selecteduser :email] "" )
+    (swap! socialcore/app-state assoc-in [:selecteduser :id] 0)
+    (swap! socialcore/app-state assoc-in [:selecteduser :pic] "" )
+    (swap! socialcore/app-state assoc-in [:selecteduser :source] "site" )
+    (swap! socialcore/app-state assoc-in [:selecteduser :locked] false )
+    (swap! socialcore/app-state assoc-in [:selecteduser :confirmed] false )
 
 
     (om/root userdetail-page-view
-             app-state
+             socialcore/app-state
              {:target (. js/document (getElementById "app"))})
-
   )
 )

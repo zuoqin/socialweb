@@ -132,7 +132,7 @@
 
     (GET "/users" []
       :header-params [authorization :- String]
-      :query-params [{page :- Long 0} ]
+      :query-params [{page :- Long -1}]
       :summary      "retrieve all users for current login"
 
       (ok  (userapi/getUsers (nth (str/split authorization #" ") 1) page)) 

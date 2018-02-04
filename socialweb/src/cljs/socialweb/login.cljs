@@ -51,7 +51,7 @@
 
 (def ch (chan (dropping-buffer 2)))
 (def jquery (js* "$"))
-(defonce app-state (atom  {:error "" :username "zuoqin@mail.ru" :password "Qwerty123" :modalText "Modal Text" :modalTitle "Modal Title" :state 0} ))
+(defonce app-state (atom  { :error "" :username "zorchenkov@gmail.com" :password "111" :modalText "Modal Text" :modalTitle "Modal Title" :state 0} ))
 
 
 (defn handleChange [e]
@@ -102,8 +102,53 @@
   (.log js/console (str "something bad happened: " status " " status-text))
 )
 
+(defn OnGetUsers [response]
+  (socialcore/OnGetUsers response)
+  (-> js/document  .-location  (set! "#/zones"))
+)
 
 
+(defn load-users [page]
+  (if (>= page 0)
+    (swap! socialcore/app-state update-in [:userspage] inc)
+    (swap! socialcore/app-state assoc-in [:nomoreusers] true)
+  )
+  
+  (swap! socialcore/app-state assoc :state 1 )
+  (GET (str settings/apipath "api/users?page=" page) {
+    :handler OnGetUsers
+    :error-handler error-handler
+    :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @socialcore/app-state))) }
+  })
+)
+
+
+(defn OnGetUser [response]
+  (let [
+    
+    ]
+    (swap! socialcore/app-state assoc-in [:user :id] (nth response 0) )
+    (swap! socialcore/app-state assoc-in [:user :email] (nth response 1))
+    (swap! socialcore/app-state assoc-in [:user :role] (nth response 2) )
+    (swap! socialcore/app-state assoc-in [:user :locked] (nth response 3))
+    (swap! socialcore/app-state assoc-in [:user :pic] (nth response 4))
+    (swap! socialcore/app-state assoc-in [:user :password] (nth response 5))
+    (swap! socialcore/app-state assoc-in [:user :confirmed] (nth response 6))
+    (swap! socialcore/app-state assoc-in [:user :source] (nth response 7))
+    (swap! socialcore/app-state assoc-in [:user :name] (nth response 8))
+  ;;(.log js/console (nth theUser 0))
+  ;;(.log js/console (:login (:user @tripcore/app-state) ))
+    (load-users (:userspage @socialcore/app-state))
+  )
+)
+
+(defn get-user [id]
+  (GET (str settings/apipath "api/user?id=" id) {
+    :handler OnGetUser
+    :error-handler error-handler
+    :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @socialcore/app-state))) }
+  })
+)
 
 (defn onLoginSuccess [response]
   (
@@ -117,10 +162,13 @@
 
     (if (nil? error)
       (let []
+        (swap! socialcore/app-state assoc-in [:nomoreusers] false)
+        (swap! socialcore/app-state assoc-in [:userspage] 0 )
         (swap! socialcore/app-state assoc-in [:token] newdata )
         (swap! socialcore/app-state assoc-in [:view] 1 )
         (swap! socialcore/app-state assoc-in [:users] [] )
-        (socialcore/get-user (get response (keyword "id")))
+        (swap! socialcore/app-state assoc-in [:selecteduser] (get response (keyword "id")))
+        (get-user (get response (keyword "id")))
       )
       (setLoginError {:error error})
     )
@@ -254,7 +302,7 @@
 )
 
 (defn onMount [data owner]
-  (.focus (om/get-node owner "txtUserName" ))
+  ;(.focus (om/get-node owner "txtUserName" ))
   (set! (.-title js/document) "Beeper Login")
   (set-google-button)
 )
@@ -266,7 +314,11 @@
     (.log js/console "starting login screen" )
   )
   (did-mount [_]
-    (.focus (om/get-node owner "txtUserName" ))
+    (set! (.-display (.-style (.getElementById js/document "socialbuttons"))) "block")
+    ;(.focus (om/get-node owner "txtUserName" ))
+  )
+  (will-unmount [_]
+    (set! (.-display (.-style (.getElementById js/document "socialbuttons"))) "none")
   )
   (render
     [_]
@@ -275,11 +327,17 @@
       ;(dom/h1 "Login Page")
       ;(dom/img {:src "images/LogonBack.jpg" :className "img-responsive company-logo-logon"})
       (dom/form {:className "form-signin"}
-        (dom/input {:type "email" :id "username" :ref "txtUserName" :value (:username @app-state) :className "form-control" :placeholder "User Name" :onChange (fn [e] (handleChange e ))} )
-        (dom/input {:className "form-control" :id "password" :value (:password @app-state) :type "password"  :placeholder "Password"} )
+        (dom/input {:type "email" :id "username" :value (:username @app-state) :className "form-control" :placeholder "User Name" :onChange (fn [e] (handleChange e ))} )
+        (if (not (socialcore/valid-email (:username @app-state)))
+          (dom/div {:style {:color "red"}} "enter correct email address")
+        )
+        (dom/input {:className "form-control" :id "password" :value (:password @app-state) :type "password" :placeholder "Password" :onChange (fn [e] (handleChange e))})
+        (dom/div {:className "row"}
+          "if you forgot your password, enter email above and click \"Forgot password\" to send it to your email address"
+        )
         (dom/div {:className "row" :style {:margin-bottom "15px"}}
           (dom/div {:className "col-md-6"}
-            (dom/button {:className (if (= (:state @app-state) 0) "btn btn-lg btn-primary btn-block" "btn btn-lg btn-primary btn-block m-progress") :style {:font-size "medium"} :type "button" :onClick (fn [e](checklogin e))} "Login")
+            (dom/button {:className (if (= (:state @app-state) 0) "btn btn-lg btn-primary btn-block" "btn btn-lg btn-primary btn-block m-progress") :disabled (not (socialcore/valid-email (:username @app-state))) :style {:font-size "medium"} :type "button" :onClick (fn [e](checklogin e))} "Login")
 
 
           )
@@ -288,6 +346,7 @@
             (dom/button { :className (if (= (:state @app-state) 0) "btn btn-lg btn-primary btn-block" "btn btn-lg btn-primary btn-block m-progress") :style {:font-size "medium" :padding-left "3px" :padding-right "0px"} :type "button" :onClick (fn [e](senduserinfo))} "Forgot password")
           )
         )
+
 
 
 

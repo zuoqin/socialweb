@@ -30,11 +30,11 @@
 (def custom-formatter1 (tf/formatter "MMM dd yyyy hh:mm:ss"))
 
 (def ch (chan (dropping-buffer 2)))
-(defonce app-state (atom  {:city "" :name "" :diff 0 :view 1 :zoneid 0 :current "Zone Detail"} ))
+(defonce app-state (atom  {:city "" :name "" :diff 0 :view 1 :id 0 :current "Zone Detail"} ))
 
 (defn OnDeleteZoneError [response]
   (let [     
-      newdata {:zoneid (get response (keyword "zoneid") ) }
+      newdata {:id (get response (keyword "id") ) }
     ]
 
   )
@@ -43,13 +43,21 @@
 )
 
 
+(defn check-zone-valid []
+  (let [
+     diff (js/parseFloat (:diff @app-state))
+  ]
+    (if (and (> (count (:city @app-state)) 0) (> (count (:name @app-state)) 0) (<= diff 14) (>= diff -12)) true false)
+  )
+)
+
 (defn OnDeleteZoneSuccess [response]
   (let [
-      zones (:zones ((keyword (:selecteduser @socialcore/app-state)) @socialcore/app-state))
-      newzones (remove (fn [zone] (if (= (:id zone) (:zoneid @app-state) ) true false)) zones)
+      zones (:zones ((keyword (str (:selecteduser @socialcore/app-state))) @socialcore/app-state))
+      newzones (remove (fn [zone] (if (= (:id zone) (:id @app-state) ) true false)) zones)
     ]
 
-    (swap! socialcore/app-state assoc-in [(keyword (:selecteduser @socialcore/app-state) ) :zones] newzones)
+    (swap! socialcore/app-state assoc-in [(keyword (str (:selecteduser @socialcore/app-state)) ) :zones] newzones)
 
     (js/window.history.back)
   )
@@ -59,7 +67,7 @@
 
 (defn OnUpdateZoneError [response]
   (let [     
-      newdata {:zoneid (get response (keyword "zoneid") ) }
+      newdata {:id (get response (keyword "id") ) }
     ]
 
   )
@@ -71,8 +79,8 @@
 (defn OnUpdateZoneSuccess [response]
   (let [
       zones (:zones ((keyword (str (:selecteduser @socialcore/app-state)) ) @socialcore/app-state))
-      newzones (remove (fn [zone] (if (= (:id zone) (:zoneid @app-state) ) true false  )) zones)
-      addzones (into [] (conj newzones {:id (:zoneid @app-state) :name (:name @app-state) :city (:city @app-state) :diff (js/parseFloat (:diff @app-state))})) 
+      newzones (remove (fn [zone] (if (= (:id zone) (:id @app-state) ) true false  )) zones)
+      addzones (into [] (conj newzones {:id (:id @app-state) :name (:name @app-state) :city (:city @app-state) :diff (js/parseFloat (:diff @app-state))})) 
     ]
     (swap! socialcore/app-state assoc-in [(keyword (str (:selecteduser @socialcore/app-state))) :zones] addzones)
     (js/window.history.back)
@@ -83,7 +91,7 @@
 
 (defn OnCreateZoneError [response]
   (let [     
-      newdata {:zoneid (get response (keyword "zoneid") ) }
+      newdata {:id (get response (keyword "id") ) }
     ]
 
   )
@@ -121,7 +129,7 @@
     :headers {
       :Authorization (str "Bearer "  (:token (:token @socialcore/app-state)))}
     :format :json
-    :params {:id (:zoneid @app-state)  :city (:city @app-state) :name (:name @app-state) :diff (js/parseFloat (:diff @app-state))}})
+    :params {:id (:id @app-state)  :city (:city @app-state) :name (:name @app-state) :diff (js/parseFloat (:diff @app-state))}})
 )
 
 (defn createZone []
@@ -173,10 +181,10 @@
 (defn setZone []
   (let [
         login (:selecteduser @socialcore/app-state)
-        zone (first (filter (fn [zone] (if (= (:zoneid @app-state) (:id zone)) true false)) (:zones ( (keyword (str (:selecteduser @socialcore/app-state))) @socialcore/app-state) )))  ]
+        zone (first (filter (fn [zone] (if (= (:id @app-state) (:id zone)) true false)) (:zones ( (keyword (str (:selecteduser @socialcore/app-state))) @socialcore/app-state) )))  ]
 
-       (.log js/console "the zone")
-       (.log js/console zone)
+       ;(.log js/console "the zone")
+       ;(.log js/console zone)
 
        (if (= zone nil)
          (setZoneNullValues)
@@ -218,8 +226,8 @@
 )
 
 (defn handleChange [e]
-  (.log js/console e  )  
-  (.log js/console "The change ....")
+  ;(.log js/console e  )  
+  ;(.log js/console "The change ....")
   (swap! app-state assoc-in [(keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
 )
 
@@ -250,24 +258,55 @@
         (dom/div {:className "panel panel-default"}
           (dom/div {:className "panel-heading"}
             (dom/div {:className "panel-title"} 
-              (dom/h5 "Name: "
-                (dom/input {:id "name" :type "text" :value  (:name @app-state) :onChange (fn [e] (handleChange e)) }))
+              (dom/div {:className "row"}
+                (dom/div {:className "col-md-1"}
+                  "Name:"
+                )
+                (dom/div {:className "col-md-2"}
+                  (dom/input {:id "name" :type "text" :style {:width "100%"} :value  (:name @app-state) :onChange (fn [e] (handleChange e)) }))
+              (if (< (count (:name @app-state)) 1)
+                (dom/div {:style {:color "red" :margin-top "5px"}}
+                  "Name should not be empty"
+                )
+              )
+              )
             )
           )
           (dom/div {:className "panel-body"}
-            (dom/h5 "City: "
-              (dom/input {:id "city" :type "text" :value (:city @app-state) :onChange (fn [e] (handleChange e))})
+            (dom/div {:className "row"}
+              (dom/div {:className "col-md-1"}
+                "City:"
+              )            
+              (dom/div {:className "col-md-2"}
+                (dom/input {:id "city" :type "text" :style {:width "100%"} :value (:city @app-state) :onChange (fn [e] (handleChange e))})
+              )
+              (if (< (count (:city @app-state)) 1)
+                (dom/div {:style {:color "red" :margin-top "5px"}}
+                  "City should not be empty"
+                )
+              )
             )
-            (dom/h5 "Difference: "
-              (dom/input {:id "diff" :type "text" :value (:diff @app-state) :onChange (fn [e] (handleChange e))})
+
+            (dom/div {:className "row" :style {:margin-top "5px"}}
+              (dom/div {:className "col-md-1"}
+                "Difference:"
+              )            
+              (dom/div {:className "col-md-2"}
+                (dom/input {:id "diff" :type "text" :value (:diff @app-state) :onChange (fn [e] (handleChange e))})
+              )
+              (if (or (> (js/parseFloat (:diff @app-state)) 14) (< (js/parseFloat (:diff @app-state)) -12))
+                (dom/div {:style {:color "red" :margin-top "5px"}}
+                  "Difference to GMT should be in [-12 +14] range"
+                )
+              )
             )
           )
         )
         (dom/nav {:className "navbar navbar-default" :role "navigation"}
           (dom/div {:className "navbar-header"}
-            (b/button {:className "btn btn-default" :onClick (fn [e] (if (= (:zoneid @app-state) 0) (createZone) (updateZone)) )} (if (= (:zoneid @app-state) 0) "Insert" "Update") )
+            (dom/button {:className "btn btn-default" :disabled (not (check-zone-valid) ) :onClick (fn [e] (if (= (:id @app-state) 0) (createZone) (updateZone)) )} (if (= (:id @app-state) 0) "Insert" "Update") )
 
-            (b/button {:className "btn btn-danger" :style {:visibility (if (= (:zoneid @app-state) 0) "hidden" "visible")} :onClick (fn [e] (deleteZone (:zoneid @app-state)))} "Delete")
+            (b/button {:className "btn btn-danger" :style {:visibility (if (= (:id @app-state) 0) "hidden" "visible")} :onClick (fn [e] (deleteZone (:id @app-state)))} "Delete")
 
             (b/button {:className "btn btn-info"  :onClick (fn [e]     (js/window.history.back))  } "Cancel")
           )
@@ -283,7 +322,8 @@
   (let [
     zoneid id
     ]
-    (swap! app-state assoc :zoneid (js/parseInt id) ) 
+    (.log js/console id)
+    (swap! app-state assoc-in [:id]  (js/parseInt id) ) 
     (om/root zonedetail-page-view
              app-state
              {:target (. js/document (getElementById "app"))})

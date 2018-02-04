@@ -28,7 +28,7 @@
 (def ch (chan (dropping-buffer 2)))
 
 
-(defonce app-state (atom {:selecteduser "" :search "" :users [] :view 1}))
+(defonce app-state (atom {:email "" :userspage 0 :nomoreusers false :selecteduser "" :search "" :users [] :view 1}))
 
 
 ;{:id 1 :name "Masha" :email "masha@gmail.com"} {:id 2 :name "Petya" :email "petya@gmail.com"} {:id 3 :name "Sanya" :email "sanya@gmail.com"}
@@ -64,6 +64,22 @@
   (.log js/console (str "something bad happened: " status " " status-text))
 )
 
+(defn check-password-complexity [password]
+  (let [
+    
+  ]
+    (if (> (count password) 7) true false)
+  )
+)
+
+(defn valid-email [email]
+  (let [
+    pattern #"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+   res (and (string? email) (re-matches pattern email))
+  ]
+    (if (nil? res) false true)
+  )
+)
 
 (defn handleChange [e]
   (swap! app-state assoc-in [(keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
@@ -76,7 +92,6 @@
 
 (defn OnGetZones [response]
   (swap! app-state assoc-in [(keyword (str (:selecteduser @app-state))) :zones] (map map-zone response))
-  (set! (.-display (.-style (.getElementById js/document "socialbuttons"))) "none")
   (aset js/window "location" "#/zones")
 )
 
@@ -90,27 +105,41 @@
 )
 
 
-(defn setUser [theUser]
-  (let [cnt (count (:users @app-state))]
-    (swap! app-state assoc-in [:users cnt] {:role (nth theUser 1)  :email (nth theUser 0) :locked (nth theUser 2) :id (nth theUser 3) :pic "" :password (nth theUser 4) :source (nth theUser 5) :confirmed (nth theUser 6)  :name (nth theUser 7)})
-  )
-)
 
 
 (defn OnGetUsers [response]
   (let [
-    
+    ;tr1 (.log js/console (str "received " (count users) " users"))
+
+    ;users (filter (fn [x] (if (> (count (filter (fn [y] (if (= (:id y) (:id x)) true false)) (:users @app-state))) 0) false true)) users)
     ]
-    (doall (map setUser response))
-    (if (= (count (filter (fn [x] (if (= (:id x) (:selecteduser @app-state)) true false)) (:users @app-state))) 0) 
+    (doall (map (fn [user] (let [
+      cnt (count (filter (fn [y] (if (= (:id y) (nth user 3)) true false)) (:users @app-state)))
+      ]
+      (if (= cnt 0)
+        (let []
+          (swap! app-state assoc-in [:users] (conj (:users @app-state) {:role (nth user 1)  :email (nth user 0) :locked (nth user 2) :id (nth user 3) :pic "" :password (nth user 4) :source (nth user 5) :confirmed (nth user 6)  :name (nth user 7)}))
+          ;(.log js/console (str "adding user " (nth user 3)))
+        )
+      ))) response)
+    )
+    (if (= (count (filter (fn [x] (if (= (:id x) (:selecteduser @app-state)) true false)) (:users @app-state))) 0)
       (swap! app-state assoc-in [:users] (conj (:users @app-state) (:user @app-state)))
     )
-    (reqzones)
+    (if (< (count response) 5) 
+      (swap! app-state assoc-in [:nomoreusers] true)
+    )
   )
 )
 
 
 (defn load-users [page]
+  (if (>= page 0)
+    (swap! app-state update-in [:userspage] inc)
+    (swap! app-state assoc-in [:nomoreusers] true)
+  )
+  
+  (swap! app-state assoc :state 1 )
   (GET (str settings/apipath "api/users?page=" page) {
     :handler OnGetUsers
     :error-handler error-handler
@@ -123,19 +152,19 @@
   (let [
     
     ]
-    (swap! app-state assoc-in [:user :id] (nth response 0) )
-    (swap! app-state assoc-in [:user :email] (nth response 1))
-    (swap! app-state assoc-in [:user :role] (nth response 2) )
-    (swap! app-state assoc-in [:user :locked] (nth response 3))
-    (swap! app-state assoc-in [:user :pic] (nth response 4))
-    (swap! app-state assoc-in [:user :password] (nth response 5))
-    (swap! app-state assoc-in [:user :confirmed] (nth response 6))
-    (swap! app-state assoc-in [:user :source] (nth response 7))
-    (swap! app-state assoc-in [:user :name] (nth response 8))
+    ;; (swap! app-state assoc-in [:user :id] (nth response 0) )
+    ;; (swap! app-state assoc-in [:user :email] (nth response 1))
+    ;; (swap! app-state assoc-in [:user :role] (nth response 2) )
+    ;; (swap! app-state assoc-in [:user :locked] (nth response 3))
+    ;; (swap! app-state assoc-in [:user :pic] (nth response 4))
+    ;; (swap! app-state assoc-in [:user :password] (nth response 5))
+    ;; (swap! app-state assoc-in [:user :confirmed] (nth response 6))
+    ;; (swap! app-state assoc-in [:user :source] (nth response 7))
+    ;; (swap! app-state assoc-in [:user :name] (nth response 8))
     (swap! app-state assoc-in [:selecteduser] (:id (:token @app-state)))
   ;;(.log js/console (nth theUser 0))
   ;;(.log js/console (:login (:user @tripcore/app-state) ))
-    (load-users 0)
+    ;(load-users (:userspage @app-state))
   )
 )
 
@@ -383,17 +412,22 @@
                  (dom/span {:className "glyphicon glyphicon-cog"})
                  "Zones"
               )
-            )         
-            (dom/li {:style {:visibility 
-                                           (if 
-                                             (or (= (:role (:user @app-state)) "admin")
-                                                 (= (:role (:user @app-state)) "manager")) "visible" "hidden")}}
-
-              (dom/a (assoc style :href "#/users") 
-                (dom/span {:className "glyphicon glyphicon-log-out"})
-                "Users"
+            )
+            (if (or (= (:role (:user @app-state)) "admin") (= (:role (:user @app-state)) "manager"))
+              (dom/li
+                (dom/a (assoc style :href "#/users")
+                  (dom/span {:className "glyphicon glyphicon-log-out"})
+                  "Users"
+                )
               )
             )
+            (dom/li
+              (dom/a (assoc style :href (str "#/userdetail/" (:id (:user @app-state))) )
+                (dom/span {:className "glyphicon glyphicon-user"})
+                "Profile"
+              )
+            )
+
             (dom/li
               (dom/a (assoc style :href "#/login" :onClick (fn [e]   (set! (.-display (.-style (.getElementById js/document "socialbuttons"))) "block") ;(set! (.-display (.-style (aget (.getElementsByClassName js/document "g-signin2") 0))) "block")
                 ))

@@ -6,7 +6,7 @@
             [secretary.core :as sec :refer-macros [defroute]]
             [goog.events :as events]
             [goog.history.EventType :as EventType]
-            [socialweb.core :as tripcore]
+            [socialweb.core :as socialcore]
             [socialweb.settings :as settings]
             [ajax.core :refer [GET POST]]
             [om-bootstrap.input :as i]
@@ -28,6 +28,12 @@
 (defn set-html! [el content]
   (aset el "innerHTML" content))
 
+(defonce app-state (atom  {:username "" :password "" :error "" :modalText "Modal Text" :modalTitle "Modal Title" :state 0} ))
+
+(defn handleChange [e]
+  (swap! app-state assoc-in [(keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
+)
+
 
 (sec/set-config! :prefix "#")
 
@@ -41,7 +47,6 @@
 
 (def ch (chan (dropping-buffer 2)))
 (def jquery (js* "$"))
-(defonce app-state (atom  {:error "" :modalText "Modal Text" :modalTitle "Modal Title" :state 0} ))
 
 
 (defn setLoginError [title error]
@@ -80,7 +85,7 @@
     ]
     (setLoginError "Create user failed" newdata)
   )
-  ;; TO-DO: Delete Trip from Core
+
   ;;(.log js/console (str  (get (first response)  "Title") ))
 )
 
@@ -95,7 +100,7 @@
   )
 )
 
-(defn doregister [username password]
+(defn doregister []
   (swap! app-state assoc-in [:state] 1)
   (swap! app-state assoc-in [:success] false)
   (POST (str settings/apipath  "api/register") {
@@ -105,22 +110,19 @@
       :content-type "application/json" 
       :Authorization (str "Bearer "  "the empty token")}
     :format :json
-    :params { :email username :password password}})
+    :params { :email (:username @app-state) :password (:password @app-state)}})
 )
 
 
 
 
-(defn checklogin [owner]
+(defn checklogin []
   (let [
-    theUserName (-> (om/get-node owner "txtUserName") .-value)
-    thePassword (-> (om/get-node owner "txtPassword") .-value)
     ]
     ;(aset js/window "location" "http://localhost:3449/#/something")
     ;(.log js/console owner ) 
 
-    (.log js/console (str  theUserName ))
-    (doregister (str theUserName) (str thePassword)) 
+    (doregister) 
   )
 )
 
@@ -155,7 +157,7 @@
     
   )
   (did-mount [_]
-    (.focus (om/get-node owner "txtUserName" ))
+
   )
   (render
     [_]
@@ -164,11 +166,18 @@
       ;(dom/h1 "Login Page")
       ;(dom/img {:src "images/LogonBack.jpg" :className "img-responsive company-logo-logon"})
       (dom/form {:className "form-signin"}
-        (dom/input #js {:type "text" :ref "txtUserName"
-           :defaultValue  settings/demouser  :className "form-control" :placeholder "User Name" } )
-        (dom/input {:className "form-control" :ref "txtPassword" :id "txtPassword" :defaultValue settings/demopassword :type "password"  :placeholder "Password"} )
-        (dom/button #js {
-          :className (if (= (:state @app-state) 0) "btn btn-lg btn-primary btn-block" "btn btn-lg btn-primary btn-block m-progress")  :type "button" :onClick (fn [e](checklogin owner))} "Registration")
+        (dom/input #js {:type "text" :id "username" :value (:username @app-state) :className "form-control" :placeholder "Email" :onChange (fn [e] (handleChange e ))})
+        (if (not (socialcore/valid-email (:username @app-state)))
+          (dom/div {:style {:color "red"}} "enter correct email address")
+        )
+        (dom/input {:className "form-control" :id "password" :value (:password @app-state) :type "password"  :placeholder "Password" :onChange (fn [e] (handleChange e ))} )
+        (if (not (socialcore/check-password-complexity (:password @app-state)))
+          (dom/div {:style {:color "red"}} "password should be at least 8 characters long")
+        )
+        
+        (dom/div {:className (if (= (:state @app-state) 0) "btn btn-lg btn-primary btn-block" "btn btn-lg btn-primary btn-block m-progress") :disabled (or (not (socialcore/check-password-complexity (:password @app-state))) (not (socialcore/valid-email (:username @app-state))))  :type "button" :onClick (fn [e](checklogin))} "Registration")
+
+        (dom/div {:className "btn btn-lg btn-primary btn-block" :type "button" :onClick (fn [e] (js/window.history.back))} "Back")
         
       )
       (addModal)
@@ -182,7 +191,7 @@
 (defmulti website-view
   (
     fn [data _]
-      (:view (if (= data nil) @tripcore/app-state @data ))
+      (:view (if (= data nil) @socialcore/app-state @data ))
   )
 )
 

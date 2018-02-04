@@ -80,18 +80,34 @@
                 (if (or ( = (nth user 1)  "admin" )  
                         ( = (nth user 1)  "manager" )
                         )
-                  (take 5 (drop (* page 5) (sort-by first (d/q '[:find ?email ?role ?locked ?u ?pwd ?s ?c ?n
-                  :where
-                  [?u :user/email ?email]
-                  [?u :user/role ?role]
-                  [(get-else $ ?u :user/locked false) ?locked]
+                  (if (= page -1)
+                    (sort-by first (d/q '[:find ?email ?role ?locked ?u ?pwd ?s ?c ?n
+                    :where
+                    [?u :user/email ?email]
+                    [?u :user/role ?role]
+                    [(get-else $ ?u :user/locked false) ?locked]
                   ;[(get-else $ ?u :user/picture "") ?p]
-                  [(get-else $ ?u :user/password "") ?pwd]
-                  [(get-else $ ?u :user/confirmed false) ?c]
-                  [(get-else $ ?u :user/source "site") ?s]
-                  [(get-else $ ?u :user/name false) ?n]
-                  ]
-                  (d/db conn))))) #{})
+                    [(get-else $ ?u :user/password "") ?pwd]
+                    [(get-else $ ?u :user/confirmed false) ?c]
+                    [(get-else $ ?u :user/source "site") ?s]
+                    [(get-else $ ?u :user/name false) ?n]
+                    ]
+                  (d/db conn)))
+
+                    (take 5 (drop (* page 5) (sort-by first (d/q '[:find ?email ?role ?locked ?u ?pwd ?s ?c ?n
+                    :where
+                    [?u :user/email ?email]
+                    [?u :user/role ?role]
+                    [(get-else $ ?u :user/locked false) ?locked]
+                    ;[(get-else $ ?u :user/picture "") ?p]
+                    [(get-else $ ?u :user/password "") ?pwd]
+                    [(get-else $ ?u :user/confirmed false) ?c]
+                    [(get-else $ ?u :user/source "site") ?s]
+                    [(get-else $ ?u :user/name false) ?n]
+                    ]
+                    (d/db conn)))))
+                  )
+ #{})
                )
     ]
     users

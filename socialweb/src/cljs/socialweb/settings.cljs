@@ -16,6 +16,3 @@
 
 
 (def apipath "http://localhost:3000/")
-
-(def demouser "zuoqin@mail.ru")
-(def demopassword "Qwerty123")

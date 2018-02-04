@@ -39,6 +39,9 @@
   (swap! app-state assoc-in [(keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
 )
 
+(defn check-user-validity []
+  (if (or (< (count (:name @app-state)) 1) (< (count (:email @app-state)) 1) (< (count (:password @app-state)) 8) (< (count (:role @app-state)) 1)) false true)
+)
 
 (defn OnDeleteUserError [response]
   (let [     
@@ -287,6 +290,7 @@
         ]
     (swap! app-state assoc-in [:id]  (:id user) ) 
     (swap! app-state assoc-in [:role]  (:role user) ) 
+    (swap! app-state assoc-in [:source]  (:source user) ) 
     (swap! app-state assoc-in [:name]  (:name user) ) 
     (swap! app-state assoc-in [:password] (:password user))
     (swap! app-state assoc-in [:confirmed] (:confirmed user))
@@ -403,21 +407,35 @@
                   (dom/div {:className "col-md-1"} "Name:")
                   (dom/div {:className "col-md-2"}
                     (dom/input {:id "name" :type "text" :onChange (fn [e] (handleChange e)) :value (:name @app-state)})
+                    (if (< (count (:name @app-state)) 1)
+                      (dom/div {:style {:color "red" :margin-top "5px"}}
+                      "name should not be empty"
+                      )
+                    )
                   )
                 )
                                     
                 (dom/div {:className "row"}
-                  (dom/div {:className "col-md-1"} (if (= (:source @app-state) "site") "email: " "ID: "))
+                  (dom/div {:className "col-md-1"} (if (or (= (:source @app-state) "site") (= (:source @app-state) ""))  "email: " "ID: "))
                   (dom/div {:className "col-md-2"}
-                    (dom/input {:id "email" :type "email" :readOnly (if (= (:source @app-state) "site") false true)  :onChange (fn [e] (handleChange e)) :value (:email @app-state)}))
-                ) 
+                    (dom/input {:id "email" :type "email" :readOnly (if (or (= (:source @app-state) "site") (= (:source @app-state) ""))  false true)  :onChange (fn [e] (handleChange e)) :value (:email @app-state)})
+                  )
+                  (if (not (socialcore/valid-email (:email @app-state)))
+                    (dom/div {:style {:color "red" :margin-top "5px"}}
+                    "email should be valid address"
+                    )
+                  )
+                )
                 
                 (dom/div {:className "row"}
-                  (dom/div {:className "col-md-1"}
-                    (dom/h5 "Password: ")
-                  )
+                  (dom/div {:className "col-md-1"} "Password:")
                   (dom/div {:className "col-md-2"}
-                    (dom/input {:id "password" :type "password" :readOnly (if (= (:source @app-state) "site") false true) :onChange (fn [e] (handleChange e)) :value (:password @app-state)})
+                    (dom/input {:id "password" :type "password" :readOnly (if (or (= (:source @app-state) "site") (= (:source @app-state) "")) false true) :onChange (fn [e] (handleChange e)) :value (:password @app-state)})
+                  )
+                  (if (< (count (:password @app-state)) 8)
+                    (dom/div { :style {:color "red" :margin-top "5px"}}
+                    "password should be at least 8 characters long"
+                    )
                   )
                 )
 
@@ -437,20 +455,34 @@
 
 
                 (dom/div {:className "row"}
-                  (dom/label {:className "checkbox-inline"}
-                    (dom/input {:id (str "chckblock") :type "checkbox" :checked (:locked @data) :data-toggle "toggle" :data-size "large" :data-width "100" :data-height "26"})
+                  (dom/div {:className "col-md-1"})
+                  (dom/div {:className "col-md-2"}
+                    (dom/label {:className "checkbox-inline"}
+                      (dom/input {:id (str "chckblock") :type "checkbox" :checked (:locked @data) :data-toggle "toggle" :data-size "large" :data-width "100" :data-height "26"})
+                    )
                   )
                 )
 
                 (dom/div {:className "row" :style {:margin-top "5px"}}
-                  (dom/label {:className "checkbox-inline"}
-                    (dom/input {:id (str "chckconfr") :disabled true :type "checkbox" :checked (:confirmed @data) :data-toggle "toggle" :data-size "large" :data-width "200" :data-height "26"})
+                  (dom/div {:className "col-md-1"})
+                  (dom/div {:className "col-md-2"}
+                    (dom/label {:className "checkbox-inline"}
+                      (dom/input {:id (str "chckconfr") :disabled true :type "checkbox" :checked (:confirmed @data) :data-toggle "toggle" :data-size "large" :data-width "200" :data-height "26"})
+                    )
                   )
                 )
 
-                (dom/h5 "Picture: "
+                (dom/div {:className "row" :style {:margin-top "5px"}}
+                  (dom/div {:className "col-md-1"}
+                     "Picture: "
+                  )
+                  (dom/div {:className "col-md-2"}
+                    (dom/input {:type "file" :style {:width "120px"} :onChange (fn [e] (readurl (.. e -target))) :name "file"})
+                  )
                   ;(dom/input {:type "file" :onChange (fn [e] (js/readURL (.. e -target))) :name "file"})
-                  (dom/input {:type "file" :onChange (fn [e] (readurl (.. e -target))) :name "file"})
+                  
+                )
+                (dom/div {:className "row"}
                   (dom/img {:id "userpic" :style {:display (if (or (nil? (:pic @app-state)) (= "" (:pic @app-state))) "none" "block") :max-width "200px" :max-height "200px"} :src (:pic @app-state) :alt "User image"})
                 )
               )              
@@ -459,17 +491,14 @@
         )
         (dom/nav {:className "navbar navbar-default" :role "navigation"}
           (dom/div {:className "navbar-header"}
-            (b/button {:className "btn btn-default" :onClick (fn [e] (if (= (:isinsert @app-state) true) (createUser) (updateUser)) )} (if (= (:isinsert @app-state) true) "Insert" "Update"))
-            (b/button {:className "btn btn-danger" :style {:visibility (if (= (:isinsert @app-state) true) "hidden" "visible")} :onClick (fn [e] (deleteUser (:id @app-state)))} "Delete")
+            (dom/button {:className "btn btn-default" :disabled (not (check-user-validity)) :onClick (fn [e] (if (= (:isinsert @app-state) true) (createUser) (updateUser)) )} (if (= (:isinsert @app-state) true) "Insert" "Update"))
+            (dom/button {:className "btn btn-danger" :style {:visibility (if (= (:isinsert @app-state) true) "hidden" "visible")} :onClick (fn [e] (deleteUser (:id @app-state)))} "Delete")
 
-            (b/button {:className "btn btn-info"  :onClick (fn [e] (-> js/document
-      .-location
-      (set! "#/users")))  } "Cancel")
+            (b/button {:className "btn btn-info"  :onClick (fn [e]     (js/window.history.back))} "Cancel")
           )
         )
       )
     )
-
   )
 )
 
@@ -500,6 +529,7 @@
     (swap! app-state assoc-in [:email] "" )
     (swap! app-state assoc-in [:id] nil )
     (swap! app-state assoc-in [:pic] "" )
+    (swap! app-state assoc-in [:source] "site" )
     (swap! app-state assoc-in [:locked] false )
 
 

@@ -222,7 +222,7 @@
 
 (defn load-users []
   (let []    
-    (socialcore/load-users 1)
+    (socialcore/load-users (:userspage @socialcore/app-state))
   )
 )
 
@@ -241,6 +241,10 @@
 
           (if (or (= (:role (:user @socialcore/app-state)) "admin") (= (:role (:user @socialcore/app-state)) "admin"))
             (dom/button {:className "btn btn-primary" :style {:margin-left "15px"} :onClick (fn [e] (show-modal-invite))} "Invite")
+          )
+
+          (if (or (= (:role (:user @socialcore/app-state)) "admin") (= (:role (:user @socialcore/app-state)) "manager"))
+            (dom/button {:className "btn btn-primary" :disabled (:nomoreusers @data) :style {:margin-left "15px"} :onClick (fn [e] (socialcore/load-users -1))} "Get all users")
           )
         )
         (dom/div {:className "panel panel-primary" :style {:margin-left "5px" :margin-top "5px"}}
@@ -268,7 +272,7 @@
           (om/build addmodalinvite  data {})
         )
         (dom/div {:className "panel-footer"}
-          (dom/button {:className (if (= 2 (:state @data)) "btn btn-info m-progress no-print" "btn btn-info no-print") :disabled (:nomoredeals @data) :style {:width "100%"} :onClick (fn [e] (load-users))} (if (:nomoredeals @data) "All users retrieved" "Next..."))
+          (dom/button {:className (if (= 2 (:state @data)) "btn btn-info m-progress no-print" "btn btn-info no-print") :disabled (:nomoreusers @data) :style {:width "100%"} :onClick (fn [e] (load-users))} (if (:nomoreusers @data) "All users retrieved" "Next..."))
         )
       ) 
     )

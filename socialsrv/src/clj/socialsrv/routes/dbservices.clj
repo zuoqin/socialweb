@@ -43,7 +43,7 @@
     (if (nil? user)
       {:result 0 :info 1}
       (if (= true locked)
-        1
+        {:result 1 :info 0}
         (if (= false confirmed)
           {:result 4 :info 1}
           (let [
@@ -51,9 +51,13 @@
             ]
             (if (nil? user)
               (let [
-                   cnt  (db/increment-lock login)
+                  cnt (db/increment-lock login)
                 ]
-                {:result 2 :info cnt}
+                (if (= cnt 0)
+                  {:result 1 :info cnt}
+                  {:result 2 :info (- 3 cnt)}
+                )
+                
               )
               (let []
                 (db/unlock-user login)

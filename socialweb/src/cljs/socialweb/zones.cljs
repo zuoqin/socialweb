@@ -75,8 +75,9 @@
 )
 
 (defn onMount [data]
-  (swap! socialcore/app-state assoc-in [:current] 
-    "Zones"
+  (swap! socialcore/app-state assoc-in [:current] "Zones")
+  (if (= (count (:zones ((keyword (str (:selecteduser @data))) @data))) 0)
+    (socialcore/reqzones)
   )
   (put! ch 42)
 )

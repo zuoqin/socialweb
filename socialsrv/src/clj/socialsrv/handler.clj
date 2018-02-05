@@ -6,7 +6,11 @@
             [compojure.route :as route]
             [socialsrv.env :refer [defaults]]
             [mount.core :as mount]
-            [socialsrv.middleware :as middleware]))
+            [socialsrv.middleware :as middleware]
+            [ring.middleware.json :refer [wrap-json-response]]
+            [ring.util.response :refer [response]]
+  )
+)
 
 (mount/defstate init-app
                 :start ((or (:init defaults) identity))
@@ -17,7 +21,7 @@
     (-> #'home-routes
         (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats))
-    #'service-routes
+    (wrap-json-response #'service-routes)
     (route/not-found
       (:body
         (error-page {:status 404

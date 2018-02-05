@@ -126,7 +126,11 @@
       :query-params [id :- Long]
       :summary      "retrieve user"
 
-      (ok  (userapi/get-user-by-id (nth (str/split authorization #" ") 1) id))
+      (ok  (let [
+        res (userapi/get-user-by-id (nth (str/split authorization #" ") 1) id) 
+        ]
+        {:id (nth res 0) :email (nth res 1) :role (nth res 2) :locked (nth res 3) :pic (nth res 4) :password (nth res 5) :confirmed (nth res 6) :source (nth res 7) :name (nth res 8)}
+      ) )
     )
 
 
@@ -135,15 +139,27 @@
       :query-params [{page :- Long -1}]
       :summary      "retrieve all users for current login"
 
-      (ok  (userapi/getUsers (nth (str/split authorization #" ") 1) page)) 
+      (ok (let [
+          res (userapi/getUsers (nth (str/split authorization #" ") 1) page)
+          ]
+          (map (fn [user] {:email (nth user 0) :role (nth user 1) :locked (nth user 2) :id (nth user 3) :password (nth user 4) :source (nth user 5) :confirmed (nth user 6) :name (nth user 7)}) res)
+        )
+      ) 
     )
 
     (POST "/user" []
       ;;:return      Long
       :header-params [authorization :- String]
-      :body-params [name :- String, email :- String, password :- String, role :- String, pic :- String, locked :- Boolean, confirmed :- Boolean]
+      :body-params [name :- String, email :- String, password :- String, role :- String, pic :- String, locked :- Boolean, confirmed :- Boolean, source :- String]
       :summary     "Create new user"
-      (ok (userapi/createUser (nth (str/split authorization #" ") 1) name email password role locked pic confirmed)))
+      (ok (let [
+        res (userapi/createUser (nth (str/split authorization #" ") 1) name email password role locked pic confirmed source)
+        ]
+        (case (:result res)
+          0 {:result "success" :info (:info res)}
+          {:result "error" :error (:info res)}
+        )
+        ) ))
 
     (DELETE "/user" []
       ;;:return      Long
@@ -157,7 +173,14 @@
       :header-params [authorization :- String]
       :body-params [id :- Long, name :- String, email :- String, password :- String, role :- String, pic :- String, locked :- Boolean]
       :summary     "Update user"
-      (ok (userapi/updateUser (nth (str/split authorization #" ") 1) id name email password role locked pic)))
+      (ok (let [res (userapi/updateUser (nth (str/split authorization #" ") 1) id name email password role locked pic)]
+        (case (:result res)
+          0 {:result "success"}
+          {:result "error" :error (:info res)}
+        )
+        )
+      )
+    )
 
     (OPTIONS "/user" []
       :summary  "Allows OPTIONS requests"
@@ -179,7 +202,12 @@
       :query-params [id :- Long ]
       :summary      "retrieve all zones for given user"
 
-      (ok  (zoneapi/getZones (nth (str/split authorization #" ") 1) id)))
+      (ok (let [res (zoneapi/getZones (nth (str/split authorization #" ") 1) id)
+          ]
+          (map (fn [zone] {:id (nth zone 0) :name (nth zone 1) :city (nth zone 2) :diff (nth zone 3)}) res)
+        )
+      )
+    )
 
     (POST "/zone" []
       ;;:return      Long

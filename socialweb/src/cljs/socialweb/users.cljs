@@ -189,14 +189,14 @@
     [_]
     (dom/div {:className "panel-body" :style {:display "block"}}
       (map (fn [item]
-        (dom/div {:className "row"}
+        (dom/div {:className "row tablerow"}
           (dom/div {:className "col-md-4" :style {:text-align "center"}}
             (dom/a {:href (str  "#/userdetail/" (:id item))} (:name item))
           )
           (dom/div {:className "col-md-3" :style {:text-align "center"}}
             (dom/a {:href (str  "#/userdetail/" (:id item))} (:email item))
           )
-          (dom/div {:className "col-md-3" :style {:text-align "center"}}
+          (dom/div {:className "col-md-2" :style {:text-align "center"}}
             (dom/a {:href (str  "#/userdetail/" (:id item))} (:role item))
           )
 
@@ -206,6 +206,9 @@
 
           (dom/div {:className "col-md-1" :style {:text-align "center"}}
             (dom/a {:href (str  "#/userdetail/" (:id item))} (if (= true (:confirmed item)) "Yes" "No"))
+          )
+          (dom/div {:className "col-md-1" :style {:text-align "center"}}
+            (dom/a {:href (str  "#/userdetail/" (:id item))} (:source item))
           )
         )                
         )(sort (comp comp-users) (filter (fn [x] (if (or (> (.indexOf (str/lower-case (:name x)) (str/lower-case (:search @socialcore/app-state))) -1) (> (.indexOf (str/lower-case (:email x)) (str/lower-case (:search @socialcore/app-state))) -1)) true false)) (:users data)))
@@ -256,7 +259,7 @@
               (dom/div {:className "col-md-3" :style {:text-align "center"}}
                 "User"
               )
-              (dom/div {:className "col-md-3" :style {:text-align "center"}}
+              (dom/div {:className "col-md-2" :style {:text-align "center"}}
                 "Role"
               )
               (dom/div {:className "col-md-1" :style {:text-align "center"}}
@@ -264,6 +267,9 @@
               )
               (dom/div {:className "col-md-1" :style {:text-align "center"}}
                 "Confirmed"
+              )
+              (dom/div {:className "col-md-1" :style {:text-align "center"}}
+                "Source"
               )
             )
           )

@@ -37,7 +37,7 @@
 
 (defn registerUser [email password]
   (let [
-    id (db/create-user "" email password "user" false "" false)
+    id (db/create-user "" email password "user" false "" false "site")
     tr1 (println (str "email=" email "; id=" id))
     msg (str  "
       <html>
@@ -47,7 +47,7 @@
           <h1>Welcome to Time Zones manager!</h1>
           <p>
             To activate your account, please, follow this
-            <a href=\"http://devstat.aytm.com:3000/api/register?id=" id "\">
+            <a href=\"http://devstat.aytm.com:3000/registration/" id "\">
   link
             </a>
           </p>
@@ -164,15 +164,18 @@
 )
 
 
-(defn createUser [token name email password role locked pic confirmed]
+(defn createUser [token name email password role locked pic confirmed source]
   (let [
     usercode (:iss (-> token str->jwt :claims)  ) 
     ;;; TO-DO: add check authorization to add 
-
+    cnt (count (filter (fn [x] (if (and (= (nth x 5) source) (= (nth x 0) email)) true false)) (db/find-users-by-email email)))
     result {:res "Success"}
     ]
     
-    {:id (db/create-user name email password role locked pic confirmed)}
+    (if (> cnt 0)
+      {:result 1 :info (str "User "  email " already exists")}
+      {:result 0 :info {:id (db/create-user name email password role locked pic confirmed source)}}
+    )
     ;; TO-DO Add check successfull
 ;    result
   )
@@ -196,11 +199,15 @@
     ;;; TO-DO: add check authorization to add 
 
     result {:res "Success"}
+    cnt (count (filter (fn [x] (if (and (not= (nth x 3) id) (= (nth x 0) email)) true false)) (db/find-users-by-email email)))
     ]
-    
-    (db/update-user id name email password role locked picture)
-    ;; TO-DO Add check successfull
-    result
+    (println (str "cnt=" cnt))
+    (if (> cnt 0)
+      {:result 1 :info (str "User " email " already exists")}
+      (let [res (db/update-user id name email password role locked picture)]
+        {:result 0 :info "success"}
+      )
+    )
   )
 )
 

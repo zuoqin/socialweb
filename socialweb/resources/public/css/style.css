@@ -136,9 +136,9 @@ div.tablerow:nth-child(2n+0){
   background: #FFFFFF;
 }
 
-div.tablerow:nth-child(2n+1){
-  background: #FFFFFF;
-}
+    div.tablerow:nth-child(2n+1){
+      background: #e7e7e7;
+    }
 
 html, body {
   height: 100%;

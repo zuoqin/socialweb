@@ -46,7 +46,7 @@
 
 
 (defn find-user [email]
-  (let [users (d/q '[:find ?email ?r ?pwd ?name
+  (let [users (d/q '[:find ?email ?r ?pwd ?name ?u
                       :in $ ?email
                       :where
                       [?u :user/email ?email]
@@ -59,6 +59,23 @@
     (if (not= users #{} ) (first users)  ["" "" "" ""]) 
   )
 )
+
+(defn find-users-by-email [email]
+  (let [users (d/q '[:find ?email ?r ?pwd ?name ?u ?source
+                      :in $ ?email
+                      :where
+                      [?u :user/email ?email]
+                      [(get-else $ ?u :user/password "") ?pwd]
+                      [(get-else $ ?u :user/name "") ?name]
+                      [(get-else $ ?u :user/source "") ?source]
+                      [?u :user/role ?r]
+                     ]
+                     (d/db conn) email)
+    ]
+    users
+  )
+)
+
 
 (defn get-users [email page]
   (let [
@@ -138,13 +155,13 @@
 )
 
 
-(defn create-user [name email password role locked picture confirmed]
+(defn create-user [name email password role locked picture confirmed source]
   (let [
     ]
     (if (= ["" "" "" ""] (find-user email))
       (let [res (d/transact
           conn
-          [{:db/id #db/id[:db.part/user -1000001] :user/name name :user/email email :user/password password :user/role role :user/locked false :user/logcnt 0 :user/source "" :user/picture picture :user/confirmed confirmed}]
+          [{:db/id #db/id[:db.part/user -1000001] :user/name name :user/email email :user/password password :user/role role :user/locked false :user/logcnt 0 :user/source source :user/picture picture :user/confirmed confirmed}]
           )]
         (second (first (:tempids @res)))
       )

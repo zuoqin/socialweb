@@ -40,7 +40,11 @@
 )
 
 (defn check-user-validity []
-  (if (or (< (count (:name (:selecteduser @socialcore/app-state))) 1) (< (count (:email (:selecteduser @socialcore/app-state))) 1) (< (count (:password (:selecteduser @socialcore/app-state))) 8) (< (count (:role (:selecteduser @socialcore/app-state))) 1)) false true)
+  (let [
+    cnt (count (filter (fn [x] (if (and (= (:email x) (:email (:selecteduser @socialcore/app-state))) (not= (:id x) (:id (:selecteduser @socialcore/app-state)))) true false)) (:users @socialcore/app-state)))
+    ]
+    (if (or  (> cnt 0) (< (count (:name (:selecteduser @socialcore/app-state))) 1) (< (count (:email (:selecteduser @socialcore/app-state))) 1) (< (count (:password (:selecteduser @socialcore/app-state))) 8) (< (count (:role (:selecteduser @socialcore/app-state))) 1)) false true)
+  )
 )
 
 (defn OnDeleteUserError [response]
@@ -74,8 +78,7 @@
   ;;(.log js/console (str  (get (first response)  "Title") ))
 )
 
-
-(defn OnUpdateUserSuccess [response]
+(defn update-users []
   (let [
       users (:users @socialcore/app-state)
       deluser (remove (fn [user] (if (= (:id user) (:id (:selecteduser @socialcore/app-state)) ) true false  )) users)
@@ -83,6 +86,39 @@
     ]
     (swap! socialcore/app-state assoc-in [:users] adduser)
     (js/window.history.back)
+  )
+)
+
+(defn showmessage []
+  (let []
+
+    ;;(.log js/console (str  "In setLoginError" (:error error) ))
+    (jquery
+      (fn []
+        (-> (jquery "#infomodal")
+          (.modal)
+        )
+      )
+    )
+  )
+)
+
+
+(defn OnUpdateUserSuccess [response]
+  (let [
+      result (get response "result")
+    ]
+    (if (= "success" result)
+      (update-users)
+      (let [error (get response "error")]
+        (swap! socialcore/app-state assoc-in [:modalTitle] 
+          (str "Error update user")
+        ) 
+
+        (swap! socialcore/app-state assoc-in [:modalText] error)
+        (showmessage)
+      )
+    )
   )
 )
 
@@ -104,9 +140,9 @@
     :handler OnUpdateUserSuccess
     :error-handler OnUpdateUserError
     :headers {
-      :content-type "application/json" 
       :Authorization (str "Bearer "  (:token (:token @socialcore/app-state)))}
     :format :json
+    :response-format :json
     :params {:name (if (nil? (:name (:selecteduser @socialcore/app-state))) "" (:name (:selecteduser @socialcore/app-state))) :email (:email (:selecteduser @socialcore/app-state)) :password (:password (:selecteduser @socialcore/app-state)) :role (:role (:selecteduser @socialcore/app-state)) :locked (:locked (:selecteduser @socialcore/app-state)) :pic (:pic (:selecteduser @socialcore/app-state)) :id (:id (:selecteduser @socialcore/app-state))}})
 )
 
@@ -122,32 +158,50 @@
 )
 
 
-(defn OnCreateUserSuccess [response]
+(defn create-user [id]
   (let [
       users (:users @socialcore/app-state)
-      adduser (into [] (conj users {:id (get response (keyword "id")) :name (:name (:selecteduser @socialcore/app-state)) :email (:email (:selecteduser @socialcore/app-state)) :locked (:locked (:selecteduser @socialcore/app-state)) :confirmed (:confirmed (:selecteduser @socialcore/app-state)) :source "site" :pic (.-src (.getElementById js/document "userpic")) :password (:password (:selecteduser @socialcore/app-state)) :role (:role (:selecteduser @socialcore/app-state))} )) 
+      adduser (into [] (conj users {:id id :name (:name (:selecteduser @socialcore/app-state)) :email (:email (:selecteduser @socialcore/app-state)) :locked (:locked (:selecteduser @socialcore/app-state)) :confirmed (:confirmed (:selecteduser @socialcore/app-state)) :source "site" :pic (.-src (.getElementById js/document "userpic")) :password (:password (:selecteduser @socialcore/app-state)) :role (:role (:selecteduser @socialcore/app-state))} )) 
     ]
     (swap! socialcore/app-state assoc-in [:users] adduser)
-    (swap! socialcore/app-state assoc-in [:selecteduser :id] (get response (keyword "id")))
+    (swap! socialcore/app-state assoc-in [:selecteduser :id] id)
     (js/window.history.back)
   )
 )
 
+(defn OnCreateUserSuccess [response]
+  (let [
+      result (get response "result")
+    ]
+    (if (= "success" result)
+      (create-user (get (get response "info") "id"))
+      (let [error (get response "error")]
+        (swap! socialcore/app-state assoc-in [:modalTitle] 
+          (str "Error create user")
+        ) 
+        (.log js/console error)
+        (swap! socialcore/app-state assoc-in [:modalText] error)
+        (showmessage)
+      )
+    )
+  )
+)
+
 (defn createUser []
-  (POST (str settings/apipath  "api/user") {
+  (POST (str settings/apipath "api/user") {
     :handler OnCreateUserSuccess
     :error-handler OnCreateUserError
     :headers {
-      :content-type "application/json" 
       :Authorization (str "Bearer "  (:token (:token @socialcore/app-state)))}
     :format :json
-    :params { :name (:name (:selecteduser @socialcore/app-state)) :email (:email (:selecteduser @socialcore/app-state)) :password (:password (:selecteduser @socialcore/app-state)) :role (:role (:selecteduser @socialcore/app-state)) :confirmed (:confirmed (:selecteduser @socialcore/app-state)) :locked (:locked (:selecteduser @socialcore/app-state)) :pic (:pic (:selecteduser @socialcore/app-state))}})
+    :response-format :json
+    :params { :name (:name (:selecteduser @socialcore/app-state)) :email (:email (:selecteduser @socialcore/app-state)) :password (:password (:selecteduser @socialcore/app-state)) :role (:role (:selecteduser @socialcore/app-state)) :source (:source (:selecteduser @socialcore/app-state)) :confirmed (:confirmed (:selecteduser @socialcore/app-state)) :locked (:locked (:selecteduser @socialcore/app-state)) :pic (:pic (:selecteduser @socialcore/app-state))}})
 )
 
 
 (defn onDropDownChange [id value]
   ;(.log js/console () e)
-  (swap! app-state assoc-in [:role] value) 
+  (swap! socialcore/app-state assoc-in [:selecteduser :role] value) 
 )
 
 
@@ -259,15 +313,15 @@
   (let [
     
     ]
-    (swap! socialcore/app-state assoc-in [:selecteduser :id] (nth response 0) )
-    (swap! socialcore/app-state assoc-in [:selecteduser :email] (nth response 1))
-    (swap! socialcore/app-state assoc-in [:selecteduser :role] (nth response 2) )
-    (swap! socialcore/app-state assoc-in [:selecteduser :locked] (nth response 3))
-    (swap! socialcore/app-state assoc-in [:selecteduser :pic] (nth response 4))
-    (swap! socialcore/app-state assoc-in [:selecteduser :password] (nth response 5))
-    (swap! socialcore/app-state assoc-in [:selecteduser :confirmed] (nth response 6))
-    (swap! socialcore/app-state assoc-in [:selecteduser :source] (nth response 7))
-    (swap! socialcore/app-state assoc-in [:selecteduser :name] (nth response 8))
+    (swap! socialcore/app-state assoc-in [:selecteduser :id] (get response "id") )
+    (swap! socialcore/app-state assoc-in [:selecteduser :email] (get response "email"))
+    (swap! socialcore/app-state assoc-in [:selecteduser :role] (get response "role") )
+    (swap! socialcore/app-state assoc-in [:selecteduser :locked] (get response "locked"))
+    (swap! socialcore/app-state assoc-in [:selecteduser :pic] (get response "pic"))
+    (swap! socialcore/app-state assoc-in [:selecteduser :password] (get response "password"))
+    (swap! socialcore/app-state assoc-in [:selecteduser :confirmed] (get response "confirmed"))
+    (swap! socialcore/app-state assoc-in [:selecteduser :source] (get response "source"))
+    (swap! socialcore/app-state assoc-in [:selecteduser :name] (get response "name"))
   )
 )
 
@@ -275,6 +329,7 @@
 (defn get-user [id]
   (GET (str settings/apipath "api/user?id=" id) {
     :handler OnGetUser
+    :response-format :json
     :error-handler error-handler
     :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @socialcore/app-state))) }
   })
@@ -378,13 +433,36 @@
   )
 )
 
+(defn addModal []
+  (dom/div
+    (dom/div {:id "infomodal" :className "modal fade" :role "dialog"}
+      (dom/div {:className "modal-dialog"} 
+        ;;Modal content
+        (dom/div {:className "modal-content"} 
+          (dom/div {:className "modal-header"} 
+                   (b/button {:type "button" :className "close" :data-dismiss "modal"})
+                   (dom/h4 {:className "modal-title"} (:modalTitle @socialcore/app-state) )
+                   )
+          (dom/div {:className "modal-body"}
+                   (dom/p (:modalText @socialcore/app-state))
+                   )
+          (dom/div {:className "modal-footer"}
+                   (b/button {:type "button" :className "btn btn-default" :data-dismiss "modal"} "Close")
+          )
+        )
+      )
+    )
+  )
+)
+
+
 
 (defcomponent userdetail-page-view [data owner]
   (did-mount [_]
     (onMount data)
   )
   (did-update [this prev-props prev-state]
-    (.log js/console "Update happened") 
+    ;(.log js/console "Update happened") 
 
     ;(put! ch 46)
   )
@@ -493,11 +571,12 @@
         (dom/nav {:className "navbar navbar-default" :role "navigation"}
           (dom/div {:className "navbar-header"}
             (dom/button {:className "btn btn-default" :disabled (or (not (socialcore/valid-email (:email (:selecteduser @socialcore/app-state)))) (not (check-user-validity))) :onClick (fn [e] (if (= (:id (:selecteduser @socialcore/app-state)) 0) (createUser) (updateUser)) )} (if (= (:id (:selecteduser @socialcore/app-state)) 0) "Insert" "Update"))
-            (dom/button {:className "btn btn-danger" :style {:visibility (if (= (:id (:selecteduser @socialcore/app-state)) 0) "hidden" "visible")} :onClick (fn [e] (deleteUser (:id (:selecteduser @socialcore/app-state))))} "Delete")
+            (dom/button {:className "btn btn-danger" :style {:visibility (if (= (:id (:selecteduser @socialcore/app-state)) 0) "hidden" "visible")} :disabled (if (= (:id (:user @socialcore/app-state)) (:id (:selecteduser @socialcore/app-state))) true false) :onClick (fn [e] (deleteUser (:id (:selecteduser @socialcore/app-state))))} "Delete")
 
             (b/button {:className "btn btn-info"  :onClick (fn [e]     (js/window.history.back))} "Cancel")
           )
         )
+        (addModal)
       )
     )
   )
@@ -530,6 +609,7 @@
     (swap! socialcore/app-state assoc-in [:selecteduser :email] "" )
     (swap! socialcore/app-state assoc-in [:selecteduser :id] 0)
     (swap! socialcore/app-state assoc-in [:selecteduser :pic] "" )
+
     (swap! socialcore/app-state assoc-in [:selecteduser :source] "site" )
     (swap! socialcore/app-state assoc-in [:selecteduser :locked] false )
     (swap! socialcore/app-state assoc-in [:selecteduser :confirmed] false )

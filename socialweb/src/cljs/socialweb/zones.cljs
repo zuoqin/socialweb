@@ -11,7 +11,7 @@
             [cljs-time.coerce :as te]
             [cljs-time.core :as tc]
             [clojure.string :as str]
-            [cljs.core.async :refer [put! dropping-buffer chan take! <!]]
+            [cljs.core.async :refer [put! dropping-buffer chan take! <! timeout]]
   )
   (:import goog.History)
 )
@@ -29,6 +29,20 @@
 
 )
 
+(defn updatepage []
+  (go
+    (<! (timeout 1000))
+    (let [a (rand-int 26)
+          b (rand-int 26)
+          c (rand-int 26)
+      ]
+      ;(.log js/console "update fakse")
+      (swap! socialcore/app-state assoc-in [:fake] (str a b c))
+      (updatepage)
+    )
+  )
+)
+
 (defn comp-zones
   [zone1 zone2]
   (if (> (compare (:name zone1) (:name zone2)) 0)
@@ -43,7 +57,7 @@
     [_]
     (dom/div {:className "panel-body" :style {:display "block"}}
       (map (fn [item]
-        (dom/div {:className "row"}
+        (dom/div {:className "row tablerow"}
           (dom/div {:className "col-md-3"}
             (dom/a {:href (str  "#/zonedetail/" (:id item) )}
               (:name item)
@@ -84,7 +98,7 @@
 
 (defn setcontrols []
   (socialcore/setUsersDropDown)
-  ;(.log js/console "fieldcode"       )
+  (updatepage)
 )
 
 

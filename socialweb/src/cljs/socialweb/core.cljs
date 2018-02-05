@@ -87,19 +87,20 @@
 
 
 (defn map-zone [zone]
-  {:id (get zone 0) :name (get zone 1) :city (get zone 2) :diff (get zone 3)}
+  {:id (get zone "id") :name (get zone "name") :city (get zone "city") :diff (get zone "diff")}
 )
 
 (defn OnGetZones [response]
   (swap! app-state assoc-in [(keyword (str (:id (:selecteduser @app-state)))) :zones] (map map-zone response))
-  (aset js/window "location" "#/zones")
+  ;(aset js/window "location" "#/zones")
 )
 
 
 (defn reqzones []
   (GET (str settings/apipath "api/zone?id=" (:id (:selecteduser @app-state ))) {:handler OnGetZones
-      :error-handler error-handler
-      :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @app-state))) }
+    :response-format :json
+    :error-handler error-handler
+    :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @app-state))) }
     }
   )
 )
@@ -114,11 +115,11 @@
     ;users (filter (fn [x] (if (> (count (filter (fn [y] (if (= (:id y) (:id x)) true false)) (:users @app-state))) 0) false true)) users)
     ]
     (doall (map (fn [user] (let [
-      cnt (count (filter (fn [y] (if (= (:id y) (nth user 3)) true false)) (:users @app-state)))
+      cnt (count (filter (fn [y] (if (= (:id y) (get user "id")) true false)) (:users @app-state)))
       ]
       (if (= cnt 0)
         (let []
-          (swap! app-state assoc-in [:users] (conj (:users @app-state) {:role (nth user 1)  :email (nth user 0) :locked (nth user 2) :id (nth user 3) :pic "" :password (nth user 4) :source (nth user 5) :confirmed (nth user 6)  :name (nth user 7)}))
+          (swap! app-state assoc-in [:users] (conj (:users @app-state) {:role (get user "role")  :email (get user "email") :locked (get user "locked") :id (get user "id") :pic "" :password (get user "password") :source (get user "source") :confirmed (get user "confirmed")  :name (get user "name")}))
           ;(.log js/console (str "adding user " (nth user 3)))
         )
       ))) response)
@@ -142,6 +143,7 @@
   (swap! app-state assoc :state 1 )
   (GET (str settings/apipath "api/users?page=" page) {
     :handler OnGetUsers
+    :response-format :json
     :error-handler error-handler
     :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @app-state))) }
   })

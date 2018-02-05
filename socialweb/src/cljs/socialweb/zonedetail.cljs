@@ -46,8 +46,10 @@
 (defn check-zone-valid []
   (let [
      diff (js/parseFloat (:diff (:selectedzone @socialcore/app-state)))
+
+     cnt (count (filter (fn [x] (if (and (= (:name x) (:name (:selectedzone @socialcore/app-state))) (= (:city x) (:city (:selectedzone @socialcore/app-state)))) true false)) (:zones ((keyword (str (:id (:selecteduser @socialcore/app-state)))) @socialcore/app-state))))
   ]
-    (if (and (> (count (:city (:selectedzone @socialcore/app-state))) 0) (> (count (:name (:selectedzone @socialcore/app-state))) 0) (<= diff 14) (>= diff -12)) true false)
+    (if (and (< cnt 2) (> (count (:city (:selectedzone @socialcore/app-state))) 0) (> (count (:name (:selectedzone @socialcore/app-state))) 0) (<= diff 14) (>= diff -12)) true false)
   )
 )
 
@@ -103,7 +105,7 @@
 (defn OnCreateZoneSuccess [response]
   (let [
       zones (:zones ((keyword (str (:selecteduser @socialcore/app-state))) @socialcore/app-state))  
-      addzones (into [] (conj zones {:id (get response (keyword "id")) :name (:name (:selectedzone @socialcore/app-state)) :city (:city (:selectedzone @socialcore/app-state)) :diff (js/parseFloat (:diff (:selectedzone @socialcore/app-state))) })) 
+      addzones (into [] (conj zones {:id (get response "id") :name (:name (:selectedzone @socialcore/app-state)) :city (:city (:selectedzone @socialcore/app-state)) :diff (js/parseFloat (:diff (:selectedzone @socialcore/app-state))) })) 
     ]
     (swap! socialcore/app-state assoc-in [(keyword (str (:selecteduser @socialcore/app-state)) ) :zones] addzones)
     (js/window.history.back)
@@ -117,7 +119,6 @@
     :handler OnDeleteZoneSuccess
     :error-handler OnDeleteZoneError
     :headers {
-      :content-type "application/json" 
       :Authorization (str "Bearer "  (:token (:token @socialcore/app-state)))}
     :format :json})
 )
@@ -129,7 +130,7 @@
     :headers {
       :Authorization (str "Bearer "  (:token (:token @socialcore/app-state)))}
     :format :json
-    :params {:id (:id (:selectedzone @socialcore/app-state))  :city (:city (:selectedzone @socialcore/app-state)) :name (:name (:selectedzone @socialcore/app-state)) :diff (js/parseFloat (:diff (:selectedzone @socialcore/app-state)))}})
+    :params {:id (:id (:selectedzone @socialcore/app-state)) :city (:city (:selectedzone @socialcore/app-state)) :name (:name (:selectedzone @socialcore/app-state)) :diff (js/parseFloat (:diff (:selectedzone @socialcore/app-state)))}})
 )
 
 (defn createZone []
@@ -139,6 +140,7 @@
     :headers {
       :Authorization (str "Bearer "  (:token (:token @socialcore/app-state)))}
     :format :json
+    :response-format :json
     :params { :user (js/parseInt (:id (:selecteduser @socialcore/app-state))) :name (:name (:selectedzone @socialcore/app-state)) :city (:city (:selectedzone @socialcore/app-state)) :diff (js/parseFloat (:diff (:selectedzone @socialcore/app-state)))}})
 )
 

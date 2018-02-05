@@ -24,6 +24,7 @@
                  [org.webjars/bootstrap "4.0.0-alpha.5"]
                  [org.webjars/font-awesome "4.7.0"]
                  [org.webjars/jquery "3.1.1"]
+                 [ring/ring-json "0.4.0"]
                  [ring-middleware-format "0.7.0"]
                  [ring-webjars "0.1.1"]
                  [ring/ring-core "1.5.1"]

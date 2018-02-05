@@ -55,6 +55,7 @@
 
 
 (defn handleChange [e]
+  (.log js/console e)
   (swap! app-state assoc-in [(keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
 )
 
@@ -117,6 +118,7 @@
   (swap! socialcore/app-state assoc :state 1 )
   (GET (str settings/apipath "api/users?page=" page) {
     :handler OnGetUsers
+    :response-format :json
     :error-handler error-handler
     :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @socialcore/app-state))) }
   })
@@ -127,15 +129,15 @@
   (let [
     
     ]
-    (swap! socialcore/app-state assoc-in [:user :id] (nth response 0) )
-    (swap! socialcore/app-state assoc-in [:user :email] (nth response 1))
-    (swap! socialcore/app-state assoc-in [:user :role] (nth response 2) )
-    (swap! socialcore/app-state assoc-in [:user :locked] (nth response 3))
-    (swap! socialcore/app-state assoc-in [:user :pic] (nth response 4))
-    (swap! socialcore/app-state assoc-in [:user :password] (nth response 5))
-    (swap! socialcore/app-state assoc-in [:user :confirmed] (nth response 6))
-    (swap! socialcore/app-state assoc-in [:user :source] (nth response 7))
-    (swap! socialcore/app-state assoc-in [:user :name] (nth response 8))
+    (swap! socialcore/app-state assoc-in [:user :id] (get response "id") )
+    (swap! socialcore/app-state assoc-in [:user :email] (get response "email"))
+    (swap! socialcore/app-state assoc-in [:user :role] (get response "role") )
+    (swap! socialcore/app-state assoc-in [:user :locked] (get response "locked"))
+    (swap! socialcore/app-state assoc-in [:user :pic] (get response "pic"))
+    (swap! socialcore/app-state assoc-in [:user :password] (get response "password"))
+    (swap! socialcore/app-state assoc-in [:user :confirmed] (get response "confirmed"))
+    (swap! socialcore/app-state assoc-in [:user :source] (get response "source"))
+    (swap! socialcore/app-state assoc-in [:user :name] (get response "name"))
   ;;(.log js/console (nth theUser 0))
   ;;(.log js/console (:login (:user @tripcore/app-state) ))
     (load-users (:userspage @socialcore/app-state))
@@ -145,19 +147,20 @@
 (defn get-user [id]
   (GET (str settings/apipath "api/user?id=" id) {
     :handler OnGetUser
+    :response-format :json
     :error-handler error-handler
-    :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @socialcore/app-state))) }
+    :headers {:Authorization (str "Bearer "  (:token  (:token @socialcore/app-state))) }
   })
 )
 
 (defn onLoginSuccess [response]
   (
     let [     
-      error (get response (keyword "error"))
-      newdata {:token (get response (keyword "access_token"))  :expires (get response (keyword "expires_in") ) :id (get response (keyword "id"))}
+      error (get response "error")
+      newdata {:token (get response "access_token")  :expires (get response "expires_in" ) :id (get response "id")}
     ]
     (swap! app-state assoc-in [:state] 0)
-    (.log js/console (str "error: " error))
+    ;(.log js/console (str "error: " error))
     ;;(.log js/console (str (select-keys (js->clj response) [:Title :Reference :Introduction])  ))    
 
     (if (nil? error)
@@ -167,9 +170,9 @@
         (swap! socialcore/app-state assoc-in [:token] newdata )
         (swap! socialcore/app-state assoc-in [:view] 1 )
         (swap! socialcore/app-state assoc-in [:users] [] )
-        (swap! socialcore/app-state assoc-in [:selecteduser :id] (get response (keyword "id"))
+        (swap! socialcore/app-state assoc-in [:selecteduser :id] (get response "id")
         )
-        (get-user (get response (keyword "id")))
+        (get-user (get response "id"))
       )
       (setLoginError {:error error})
     )
@@ -242,10 +245,11 @@
 
     ;; currently selected user
 
-
+    ;(.log js/console "application")
     (POST (str settings/apipath "token")
       {:handler OnLogin
        :error-handler onLoginError
+       :response-format :json
        :headers {:content-type "application/x-www-form-urlencoded"}
        :body (str "grant_type=password&username=" (:username @app-state) "&password=" (:password @app-state)) 
       })
@@ -312,7 +316,7 @@
 
 (defcomponent login-page-view [data owner]
   (did-update [this prev-props prev-state]
-    (.log js/console "starting login screen" )
+    ;(.log js/console "starting login screen" )
   )
   (did-mount [_]
     (set! (.-display (.-style (.getElementById js/document "socialbuttons"))) "block")

@@ -421,14 +421,24 @@
 (defn readurl [input]
   (if (not (nil? (.-files input)))
     (let [
-        
+      size (.-size (aget (.-files input) 0))
         
       ]
+      (.log js/console (str "file size=" (.-size (aget (.-files input) 0))))
       (set! (.-onload reader) (fn [e] 
         ;(.log js/console (.-result (.-target e)))
         (swap! socialcore/app-state assoc-in [:selecteduser :pic] (.-result (.-target e)))
       ))
-      (.readAsDataURL reader (aget (.-files input) 0))
+      (if (> size 200000)
+        (let []
+          (swap! socialcore/app-state assoc-in [:modalTitle]
+            (str "Upload file error")
+          )
+          (swap! socialcore/app-state assoc-in [:modalText] "File size should be less than 200KBytes")
+          (showmessage)
+        )
+        (.readAsDataURL reader (aget (.-files input) 0))
+      )
     )
   )
 )
@@ -474,14 +484,12 @@
       (dom/div
         (om/build socialcore/website-view data {})
         (dom/div {:id "user-detail-container"}
-          (dom/span
-            (dom/div  (assoc styleprimary  :className "panel panel-default"  :id "divUserInfo")
-              
+            (dom/div  (assoc styleprimary  :className "panel panel-default"  :id "divUserInfo")              
               (dom/div {:className "panel-heading"}
                 (dom/div {:className "row"}
                   (dom/div {:className "col-md-1"} "Name:")
                   (dom/div {:className "col-md-2"}
-                    (dom/input {:id "name" :type "text" :onChange (fn [e] (handleChange e)) :value (:name (:selecteduser @socialcore/app-state))})
+                    (dom/input {:id "name" :type "text" :onChange (fn [e] (handleChange e)) :value (if (nil? (:name (:selecteduser @socialcore/app-state))) "" (:name (:selecteduser @socialcore/app-state)))})
                   )
                   (if (< (count (:name (:selecteduser @socialcore/app-state))) 1)
                     (dom/div {:style {:color "red" :margin-top "5px"}}
@@ -493,7 +501,7 @@
                 (dom/div {:className "row"}
                   (dom/div {:className "col-md-1"} (if (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) ""))  "email: " "ID: "))
                   (dom/div {:className "col-md-2"}
-                    (dom/input {:id "email" :type (if (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) "")) "email" "text") :readOnly (if (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) ""))  false true)  :onChange (fn [e] (handleChange e)) :value (:email (:selecteduser @socialcore/app-state))})
+                    (dom/input {:id "email" :type (if (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) "")) "email" "text") :readOnly (if (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) ""))  false true)  :onChange (fn [e] (handleChange e)) :value (if (nil? (:email (:selecteduser @socialcore/app-state))) "" (:email (:selecteduser @socialcore/app-state)))})
                   )
                   (if (and (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) "")) (not (socialcore/valid-email (:email (:selecteduser @socialcore/app-state)))))
                     (dom/div {:style {:color "red" :margin-top "5px"}}
@@ -505,7 +513,7 @@
                 (dom/div {:className "row"}
                   (dom/div {:className "col-md-1"} "Password:")
                   (dom/div {:className "col-md-2"}
-                    (dom/input {:id "password" :type "password" :readOnly (if (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) "")) false true) :onChange (fn [e] (handleChange e)) :value (:password (:selecteduser @socialcore/app-state))})
+                    (dom/input {:id "password" :type "password" :readOnly (if (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) "")) false true) :onChange (fn [e] (handleChange e)) :value (if (nil? (:password (:selecteduser @socialcore/app-state))) "" (:password (:selecteduser @socialcore/app-state))) })
                   )
                   (if (and (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) "")) (< (count (:password (:selecteduser @socialcore/app-state))) 8))
                     (dom/div { :style {:color "red" :margin-top "5px"}}
@@ -566,11 +574,11 @@
                 )
               )              
             )
-          )
+
         )
         (dom/nav {:className "navbar navbar-default" :role "navigation"}
           (dom/div {:className "navbar-header"}
-            (dom/button {:className "btn btn-default" :disabled (or (not (socialcore/valid-email (:email (:selecteduser @socialcore/app-state)))) (not (check-user-validity))) :onClick (fn [e] (if (= (:id (:selecteduser @socialcore/app-state)) 0) (createUser) (updateUser)) )} (if (= (:id (:selecteduser @socialcore/app-state)) 0) "Insert" "Update"))
+            (dom/button {:className "btn btn-default" :disabled (or (and (or (= (:source (:selecteduser @socialcore/app-state)) "site") (= (:source (:selecteduser @socialcore/app-state)) "")) (not (socialcore/valid-email (:email (:selecteduser @socialcore/app-state))))) (not (check-user-validity))) :onClick (fn [e] (if (= (:id (:selecteduser @socialcore/app-state)) 0) (createUser) (updateUser)) )} (if (= (:id (:selecteduser @socialcore/app-state)) 0) "Insert" "Update"))
             (dom/button {:className "btn btn-danger" :style {:visibility (if (= (:id (:selecteduser @socialcore/app-state)) 0) "hidden" "visible")} :disabled (if (= (:id (:user @socialcore/app-state)) (:id (:selecteduser @socialcore/app-state))) true false) :onClick (fn [e] (deleteUser (:id (:selecteduser @socialcore/app-state))))} "Delete")
 
             (b/button {:className "btn btn-info"  :onClick (fn [e]     (js/window.history.back))} "Cancel")

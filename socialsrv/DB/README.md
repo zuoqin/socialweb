@@ -2,13 +2,6 @@
 
 d:
 cd D:\datomic-pro-0.9.5350
-
-https://www.youtube.com/watch?v=kd1yTmx7m2A
-
-
-## Run a Transactor
-http://docs.datomic.com/run-transactor.html
-
 bin\transactor config\samples\dev-transactor-template.properties
 
 

@@ -55,7 +55,7 @@
 
 
 (defn handleChange [e]
-  (.log js/console e)
+  ;(.log js/console e)
   (swap! app-state assoc-in [(keyword (.. e -nativeEvent -target -id))] (.. e -nativeEvent -target -value))
 )
 
@@ -432,6 +432,7 @@
     {:handler OnLogin
      :error-handler onLoginError
      :headers {}
+     :response-format :json
      :format :json
      :params {:id id :from from :picture (.-picture js/window) :name (.-username js/window)} 
     }
@@ -449,11 +450,24 @@
 )
 
 
-(defn main []
-  (-> js/document
-      .-location
-      (set! "#/login"))
 
+(sec/defroute home-login-page "/" []
+  (let [
+    
+    ]
+    (-> js/document .-location (set! "#/login"))
+    ;(.log js/console (str "from= " (:from query-params)))
+    ;(get-social-user id (:from query-params))    
+  )
+)
+
+
+(defn main []
+  ;(-> js/document .-location (set! "#/login"))
+  (.log js/console )
+  (if (= (.-href (.-location js/window)) "http://devstat.aytm.com:3449/")
+    (-> js/document .-location (set! "#/login"))
+  )
   ;;(aset js/window "location" "#/login")
 )
 

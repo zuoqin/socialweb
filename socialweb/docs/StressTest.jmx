@@ -173,7 +173,7 @@
                 <stringProp name="RegexExtractor.match_number">1</stringProp>
               </RegexExtractor>
               <hashTree/>
-              <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract Users Groups" enabled="true">
+              <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract Users Groups" enabled="false">
                 <stringProp name="RegexExtractor.useHeaders">false</stringProp>
                 <stringProp name="RegexExtractor.refname">usersgroups</stringProp>
                 <stringProp name="RegexExtractor.regex">^.{1}(.*)</stringProp>
@@ -185,12 +185,11 @@
               <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract Users" enabled="true">
                 <stringProp name="RegexExtractor.useHeaders">false</stringProp>
                 <stringProp name="RegexExtractor.refname">allusers</stringProp>
-                <stringProp name="RegexExtractor.regex">\[([^\]]+)\]</stringProp>
+                <stringProp name="RegexExtractor.regex">&quot;id&quot;:(.+?),</stringProp>
                 <stringProp name="RegexExtractor.template">$1$</stringProp>
-                <stringProp name="RegexExtractor.default">jhgjhghj</stringProp>
+                <stringProp name="RegexExtractor.default">888888</stringProp>
                 <stringProp name="RegexExtractor.match_number">-1</stringProp>
                 <stringProp name="Scope.variable">usersgroups</stringProp>
-                <stringProp name="Sample.scope">variable</stringProp>
               </RegexExtractor>
               <hashTree/>
             </hashTree>
@@ -200,32 +199,47 @@
               <boolProp name="ForeachController.useSeparator">true</boolProp>
             </ForeachController>
             <hashTree/>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request" enabled="false">
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">${allusers}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+              <stringProp name="HTTPSampler.domain"></stringProp>
+              <stringProp name="HTTPSampler.port"></stringProp>
+              <stringProp name="HTTPSampler.protocol"></stringProp>
+              <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+              <stringProp name="HTTPSampler.path">api/zone</stringProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+              <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+              <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+              <stringProp name="HTTPSampler.response_timeout"></stringProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
             <ForeachController guiclass="ForeachControlPanel" testclass="ForeachController" testname="ForEach Controller" enabled="true">
               <stringProp name="ForeachController.inputVal">allusers</stringProp>
               <stringProp name="ForeachController.returnVal">users</stringProp>
               <boolProp name="ForeachController.useSeparator">true</boolProp>
             </ForeachController>
             <hashTree>
-              <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract each user id" enabled="true">
-                <stringProp name="TestPlan.comments">Obtain IDs for users</stringProp>
-                <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                <stringProp name="RegexExtractor.refname">uservals</stringProp>
-                <stringProp name="RegexExtractor.regex">([^,]+)</stringProp>
-                <stringProp name="RegexExtractor.template">$1$</stringProp>
-                <stringProp name="RegexExtractor.default">66</stringProp>
-                <stringProp name="RegexExtractor.match_number">-1</stringProp>
-                <stringProp name="Sample.scope">variable</stringProp>
-                <stringProp name="Scope.variable">users</stringProp>
-              </RegexExtractor>
-              <hashTree/>
-              <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request" enabled="true">
-                <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
-                <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get User&apos;s Zones" enabled="true">
+                <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
                   <collectionProp name="Arguments.arguments">
-                    <elementProp name="" elementType="HTTPArgument">
+                    <elementProp name="id" elementType="HTTPArgument">
                       <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                      <stringProp name="Argument.value">${uservals}</stringProp>
+                      <stringProp name="Argument.value">${users}</stringProp>
                       <stringProp name="Argument.metadata">=</stringProp>
+                      <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                      <stringProp name="Argument.name">id</stringProp>
                     </elementProp>
                   </collectionProp>
                 </elementProp>
@@ -233,8 +247,8 @@
                 <stringProp name="HTTPSampler.port"></stringProp>
                 <stringProp name="HTTPSampler.protocol"></stringProp>
                 <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-                <stringProp name="HTTPSampler.path">api/zone</stringProp>
-                <stringProp name="HTTPSampler.method">POST</stringProp>
+                <stringProp name="HTTPSampler.path">/api/zone</stringProp>
+                <stringProp name="HTTPSampler.method">GET</stringProp>
                 <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
                 <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
                 <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -243,80 +257,56 @@
                 <stringProp name="HTTPSampler.connect_timeout"></stringProp>
                 <stringProp name="HTTPSampler.response_timeout"></stringProp>
               </HTTPSamplerProxy>
-              <hashTree/>
-              <IfController guiclass="IfControllerPanel" testclass="IfController" testname="If Controller" enabled="false">
-                <stringProp name="IfController.condition">${uservals} == 66</stringProp>
-                <boolProp name="IfController.evaluateAll">false</boolProp>
-              </IfController>
               <hashTree>
-                <ForeachController guiclass="ForeachControlPanel" testclass="ForeachController" testname="ForEach Controller" enabled="true">
-                  <stringProp name="ForeachController.inputVal">uservals</stringProp>
-                  <stringProp name="ForeachController.returnVal">userid</stringProp>
-                  <boolProp name="ForeachController.useSeparator">true</boolProp>
-                  <stringProp name="ForeachController.startIndex">3</stringProp>
-                  <stringProp name="ForeachController.endIndex">4</stringProp>
-                </ForeachController>
-                <hashTree>
-                  <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="forEachUser" enabled="true">
-                    <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
-                      <collectionProp name="Arguments.arguments">
-                        <elementProp name="id" elementType="HTTPArgument">
-                          <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                          <stringProp name="Argument.value">${userid}</stringProp>
-                          <stringProp name="Argument.metadata">=</stringProp>
-                          <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                          <stringProp name="Argument.name">id</stringProp>
-                        </elementProp>
-                      </collectionProp>
+                <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+                  <collectionProp name="HeaderManager.headers">
+                    <elementProp name="" elementType="Header">
+                      <stringProp name="Header.name">Authorization</stringProp>
+                      <stringProp name="Header.value">Bearer ${authToken}</stringProp>
                     </elementProp>
-                    <stringProp name="HTTPSampler.domain"></stringProp>
-                    <stringProp name="HTTPSampler.port"></stringProp>
-                    <stringProp name="HTTPSampler.protocol"></stringProp>
-                    <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-                    <stringProp name="HTTPSampler.path">/api/zone</stringProp>
-                    <stringProp name="HTTPSampler.method">GET</stringProp>
-                    <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-                    <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-                    <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-                    <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-                    <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-                    <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-                    <stringProp name="HTTPSampler.response_timeout"></stringProp>
-                  </HTTPSamplerProxy>
-                  <hashTree>
-                    <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-                      <collectionProp name="HeaderManager.headers">
-                        <elementProp name="" elementType="Header">
-                          <stringProp name="Header.name">Authorization</stringProp>
-                          <stringProp name="Header.value">Bearer ${authToken}</stringProp>
-                        </elementProp>
-                        <elementProp name="" elementType="Header">
-                          <stringProp name="Header.name">Content-Type</stringProp>
-                          <stringProp name="Header.value">application/json</stringProp>
-                        </elementProp>
-                      </collectionProp>
-                    </HeaderManager>
-                    <hashTree/>
-                  </hashTree>
-                </hashTree>
+                    <elementProp name="" elementType="Header">
+                      <stringProp name="Header.name">Content-Type</stringProp>
+                      <stringProp name="Header.value">application/json</stringProp>
+                    </elementProp>
+                  </collectionProp>
+                </HeaderManager>
+                <hashTree/>
               </hashTree>
+              <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract Zones" enabled="true">
+                <stringProp name="RegexExtractor.useHeaders">unescaped</stringProp>
+                <stringProp name="RegexExtractor.refname">userzones</stringProp>
+                <stringProp name="RegexExtractor.regex">\[([^\]]+)\]</stringProp>
+                <stringProp name="RegexExtractor.template">$1$</stringProp>
+                <stringProp name="RegexExtractor.default">111111</stringProp>
+                <stringProp name="RegexExtractor.match_number">1</stringProp>
+                <stringProp name="Scope.variable">usersgroups</stringProp>
+              </RegexExtractor>
+              <hashTree/>
+              <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract Zones" enabled="true">
+                <stringProp name="RegexExtractor.useHeaders">false</stringProp>
+                <stringProp name="RegexExtractor.refname">userzonesgroups</stringProp>
+                <stringProp name="RegexExtractor.regex">([^{]+})</stringProp>
+                <stringProp name="RegexExtractor.template">$1$</stringProp>
+                <stringProp name="RegexExtractor.default">111111</stringProp>
+                <stringProp name="RegexExtractor.match_number">-1</stringProp>
+                <stringProp name="Scope.variable">userzones</stringProp>
+                <stringProp name="Sample.scope">variable</stringProp>
+              </RegexExtractor>
+              <hashTree/>
               <ForeachController guiclass="ForeachControlPanel" testclass="ForeachController" testname="ForEach Controller" enabled="true">
-                <stringProp name="ForeachController.inputVal">uservals</stringProp>
-                <stringProp name="ForeachController.returnVal">userid</stringProp>
+                <stringProp name="ForeachController.inputVal">userzonesgroups</stringProp>
+                <stringProp name="ForeachController.returnVal">zone</stringProp>
                 <boolProp name="ForeachController.useSeparator">true</boolProp>
-                <stringProp name="ForeachController.startIndex">3</stringProp>
-                <stringProp name="ForeachController.endIndex">4</stringProp>
               </ForeachController>
               <hashTree>
-                <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="forEachUser" enabled="true">
-                  <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+                <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Sample Zone" enabled="true">
+                  <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+                  <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
                     <collectionProp name="Arguments.arguments">
-                      <elementProp name="id" elementType="HTTPArgument">
+                      <elementProp name="" elementType="HTTPArgument">
                         <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                        <stringProp name="Argument.value">${userid}</stringProp>
+                        <stringProp name="Argument.value">${zone}</stringProp>
                         <stringProp name="Argument.metadata">=</stringProp>
-                        <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                        <stringProp name="Argument.name">id</stringProp>
                       </elementProp>
                     </collectionProp>
                   </elementProp>
@@ -325,7 +315,66 @@
                   <stringProp name="HTTPSampler.protocol"></stringProp>
                   <stringProp name="HTTPSampler.contentEncoding"></stringProp>
                   <stringProp name="HTTPSampler.path">/api/zone</stringProp>
-                  <stringProp name="HTTPSampler.method">GET</stringProp>
+                  <stringProp name="HTTPSampler.method">PUT</stringProp>
+                  <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+                  <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+                  <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+                  <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+                  <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+                  <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+                  <stringProp name="HTTPSampler.response_timeout"></stringProp>
+                </HTTPSamplerProxy>
+                <hashTree/>
+                <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract Zones Names" enabled="true">
+                  <stringProp name="RegexExtractor.useHeaders">false</stringProp>
+                  <stringProp name="RegexExtractor.refname">zonename</stringProp>
+                  <stringProp name="RegexExtractor.regex">&quot;name&quot;:(.+?),</stringProp>
+                  <stringProp name="RegexExtractor.template">$1$</stringProp>
+                  <stringProp name="RegexExtractor.default">111111</stringProp>
+                  <stringProp name="RegexExtractor.match_number">1</stringProp>
+                  <stringProp name="Scope.variable">zone</stringProp>
+                  <stringProp name="Sample.scope">variable</stringProp>
+                </RegexExtractor>
+                <hashTree/>
+                <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract Zones Cities" enabled="true">
+                  <stringProp name="RegexExtractor.useHeaders">false</stringProp>
+                  <stringProp name="RegexExtractor.refname">zonecity</stringProp>
+                  <stringProp name="RegexExtractor.regex">&quot;city&quot;:(.+?),</stringProp>
+                  <stringProp name="RegexExtractor.template">$1$</stringProp>
+                  <stringProp name="RegexExtractor.default">111111</stringProp>
+                  <stringProp name="RegexExtractor.match_number">1</stringProp>
+                  <stringProp name="Scope.variable">zone</stringProp>
+                  <stringProp name="Sample.scope">variable</stringProp>
+                </RegexExtractor>
+                <hashTree/>
+                <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract Zones IDs" enabled="true">
+                  <stringProp name="RegexExtractor.useHeaders">false</stringProp>
+                  <stringProp name="RegexExtractor.refname">zoneid</stringProp>
+                  <stringProp name="RegexExtractor.regex">&quot;id&quot;:(.+?),</stringProp>
+                  <stringProp name="RegexExtractor.template">$1$</stringProp>
+                  <stringProp name="RegexExtractor.default">111111</stringProp>
+                  <stringProp name="RegexExtractor.match_number">1</stringProp>
+                  <stringProp name="Scope.variable">zone</stringProp>
+                  <stringProp name="Sample.scope">variable</stringProp>
+                </RegexExtractor>
+                <hashTree/>
+                <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Update Zone" enabled="true">
+                  <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+                  <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                    <collectionProp name="Arguments.arguments">
+                      <elementProp name="" elementType="HTTPArgument">
+                        <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                        <stringProp name="Argument.value">{&quot;id&quot;:${zoneid}, &quot;name&quot;:${zonename}, &quot;city&quot;: ${zonecity}, &quot;diff&quot;: 1.0}</stringProp>
+                        <stringProp name="Argument.metadata">=</stringProp>
+                      </elementProp>
+                    </collectionProp>
+                  </elementProp>
+                  <stringProp name="HTTPSampler.domain"></stringProp>
+                  <stringProp name="HTTPSampler.port"></stringProp>
+                  <stringProp name="HTTPSampler.protocol"></stringProp>
+                  <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+                  <stringProp name="HTTPSampler.path">/api/zone</stringProp>
+                  <stringProp name="HTTPSampler.method">PUT</stringProp>
                   <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
                   <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
                   <boolProp name="HTTPSampler.use_keepalive">true</boolProp>

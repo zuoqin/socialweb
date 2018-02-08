@@ -177,7 +177,7 @@
         
         (dom/div {:className (if (= (:state @app-state) 0) "btn btn-lg btn-primary btn-block" "btn btn-lg btn-primary btn-block m-progress") :disabled (or (not (socialcore/check-password-complexity (:password @app-state))) (not (socialcore/valid-email (:username @app-state))))  :type "button" :onClick (fn [e](checklogin))} "Registration")
 
-        (dom/div {:className "btn btn-lg btn-primary btn-block" :type "button" :onClick (fn [e] (js/window.history.back))} "Back")
+        (dom/div {:className "btn btn-lg btn-primary btn-block" :type "button" :onClick (fn [e] (-> js/document .-location (set! "#/login")))} "Back")
         
       )
       (addModal)

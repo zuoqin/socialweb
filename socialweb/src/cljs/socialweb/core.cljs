@@ -100,7 +100,7 @@
   (GET (str settings/apipath "api/zone?id=" (:id (:selecteduser @app-state ))) {:handler OnGetZones
     :response-format :json
     :error-handler error-handler
-    :headers {:content-type "application/json" :Authorization (str "Bearer "  (:token  (:token @app-state))) }
+    :headers {:Authorization (str "Bearer "  (:token  (:token @app-state))) }
     }
   )
 )
@@ -325,22 +325,22 @@
 ;;   (.log js/console (str "something bad happened: " status " " status-text))
 ;; )
 
-(defn getZones [] 
-  (GET (str settings/apipath "api/zone?id=" (:id (:selecteduser @app-state)) ) {
-    :handler OnGetZones
-    :error-handler error-handler
-    :headers {
-      :content-type "application/json"
-      :Authorization (str "Bearer "  (:token (:token @app-state))) }
-  })
-)
+;; (defn getZones [] 
+;;   (GET (str settings/apipath "api/zone?id=" (:id (:selecteduser @app-state)) ) {
+;;     :handler OnGetZones
+;;     :error-handler error-handler
+;;     :headers {
+;;       :content-type "application/json"
+;;       :Authorization (str "Bearer "  (:token (:token @app-state))) }
+;;   })
+;; )
 
 (defn onDropDownChange [id value]
   (swap! app-state assoc-in [:selecteduser :id] value)
 
   
   (if (nil? (:zones ((keyword value) @app-state)))
-    (getZones)
+    (reqzones)
   )
 )
 

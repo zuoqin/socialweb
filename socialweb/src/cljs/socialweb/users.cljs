@@ -47,6 +47,7 @@
         )
       )
     )
+    (.focus (.getElementById js/document "email"))
   )
 )
 

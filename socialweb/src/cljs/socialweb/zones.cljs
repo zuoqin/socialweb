@@ -82,7 +82,7 @@
             )
           )
         )                  
-        ) (sort (comp comp-zones) (filter (fn [x] (if (or (> (.indexOf (str/lower-case (:name x)) (str/lower-case (:search @socialcore/app-state))) -1) (> (.indexOf (str/lower-case (:city x)) (str/lower-case (:search @socialcore/app-state))) -1)) true false)) (:zones ((keyword (str (:id (:selecteduser @data)))) @data))))
+        ) (sort (comp comp-zones) (filter (fn [x] (if (or (> (.indexOf (str/lower-case (if (nil? (:name x)) "" (:name x))) (str/lower-case (:search @socialcore/app-state))) -1) (> (.indexOf (str/lower-case (if (nil? (:city x)) "" (:city x))) (str/lower-case (:search @socialcore/app-state))) -1)) true false)) (:zones ((keyword (str (:id (:selecteduser @data)))) @data))))
       )
     )
   )

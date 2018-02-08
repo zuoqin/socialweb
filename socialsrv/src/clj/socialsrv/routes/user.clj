@@ -38,7 +38,7 @@
 (defn registerUser [email password]
   (let [
     id (db/create-user "" email password "user" false "" false "site")
-    tr1 (println (str "email=" email "; id=" id))
+    ;tr1 (println (str "email=" email "; id=" id))
     msg (str  "
       <html>
         <head>
@@ -132,7 +132,7 @@
           <h1>Welcome to Time Zones manager!</h1>
           <p>
   Dear friend, you have been invited to join Time Zones Manager! Please, follow this
-            <a href=\"http://devstat.aytm.com:3449/#/register" "\">
+            <a href=\"http://devstat.aytm.com:3449/#/registration" "\">
   link
             </a> to register.
           </p>
@@ -199,9 +199,9 @@
     ;;; TO-DO: add check authorization to add 
 
     result {:res "Success"}
-    cnt (count (filter (fn [x] (if (and (not= (nth x 3) id) (= (nth x 0) email)) true false)) (db/find-users-by-email email)))
+    cnt (count (filter (fn [x] (if (and (not= (nth x 4) id) (= (nth x 0) email)) true false)) (db/find-users-by-email email)))
     ]
-    (println (str "cnt=" cnt))
+    ;(println (str "cnt=" cnt))
     (if (> cnt 0)
       {:result 1 :info (str "User " email " already exists")}
       (let [res (db/update-user id name email password role locked picture)]

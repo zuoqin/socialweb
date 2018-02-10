@@ -45,10 +45,40 @@
 
 (defn comp-zones
   [zone1 zone2]
-  (if (> (compare (:name zone1) (:name zone2)) 0)
+  (case (:sort-list @socialcore/app-state)
+    1 (if (> (compare (:name zone1) (:name zone2)) 0)
       false
       true
+    )
+    2 (if (> (compare (:name zone1) (:name zone2)) 0)
+      true
+      false
+    )
+
+
+    3 (if (> (compare (:city zone1) (:city zone2)) 0)
+      false
+      true
+    )
+    4 (if (> (compare (:city zone1) (:city zone2)) 0)
+      true
+      false
+    )
+
+    5 (if (> (:diff zone1) (:diff zone2))
+      false
+      true
+    )
+    6 (if (> (:diff zone1) (:diff zone2))
+      true
+      false
+    )
+    (if (> (compare (:name zone1) (:name zone2)) 0)
+      false
+      true
+    )
   )
+  
 )
 
 
@@ -58,25 +88,25 @@
     (dom/div {:className "panel-body" :style {:display "block"}}
       (map (fn [item]
         (dom/div {:className "row tablerow"}
-          (dom/div {:className "col-md-3"}
+          (dom/div {:className "col-md-3" :style {:text-align "center"}}
             (dom/a {:href (str  "#/zonedetail/" (:id item) )}
               (:name item)
             )
           )
 
-          (dom/div {:className "col-md-3"}
+          (dom/div {:className "col-md-3" :style {:text-align "center"}}
             (dom/a {:href (str  "#/zonedetail/" (:id item) )}
               (:city item)
             )
           )
 
-          (dom/div {:className "col-md-3"}
+          (dom/div {:className "col-md-3" :style {:text-align "center"}}
             (dom/a {:href (str  "#/zonedetail/" (:id item) )}
-               (:diff item)
+               (str (if (> (:diff item) 0) "+" "") (:diff item))
             )
           )
 
-          (dom/div {:className "col-md-3"}
+          (dom/div {:className "col-md-3" :style {:text-align "center"}}
             (dom/a {:href (str  "#/zonedetail/" (:id item) )}
               (tf/unparse custom-formatter1 (te/from-long (+ (te/to-long (tc/now)) (* 1000 60 60 (:diff item)))))
             )
@@ -128,7 +158,7 @@
       ]
       (dom/div
         (om/build socialcore/website-view socialcore/app-state {})
-        (dom/div { :style {:margin-top "70px" :margin-left "5px"}}
+        (dom/div { :style {:margin-top "70px" :margin-left "5px" :margin-bottom "5px"}}
           (dom/button {:className "btn btn-primary no-print" :onClick (fn [e] (-> js/document
         .-location
         (set! "#/zonedetail/0")))} "Add New")
@@ -136,14 +166,14 @@
         (dom/div {:className "panel panel-primary" :style {:margin-left "5px"}}
           (dom/div {:className "panel-heading"}
             (dom/div {:className "row"}
-              (dom/div {:className "col-md-3"}
-                "Name"
+              (dom/div {:className "col-md-3" :style {:cursor "pointer" :text-align "center" :background-image (case (:sort-list @data) 1 "url(images/sort_asc.png" 2 "url(images/sort_desc.png" "url(images/sort_both.png") :background-repeat "no-repeat" :background-position "left"}}
+                (dom/span {:onClick (fn [e] (swap! socialcore/app-state assoc-in [:sort-list] (case (:sort-list @data) 1 2 1)) (socialcore/doswaps))} "Name")
               )
-              (dom/div {:className "col-md-3"}
-                "City"
+              (dom/div {:className "col-md-3" :style {:cursor "pointer" :text-align "center" :background-image (case (:sort-list @data) 3 "url(images/sort_asc.png" 4 "url(images/sort_desc.png" "url(images/sort_both.png") :background-repeat "no-repeat" :background-position "left"}}
+                (dom/span {:onClick (fn [e] (swap! socialcore/app-state assoc-in [:sort-list] (case (:sort-list @data) 3 4 3)) (socialcore/doswaps))} "City")
               )
-              (dom/div {:className "col-md-3"}
-                "Difference"
+              (dom/div {:className "col-md-3" :style {:cursor "pointer" :text-align "center" :background-image (case (:sort-list @data) 5 "url(images/sort_asc.png" 6 "url(images/sort_desc.png" "url(images/sort_both.png") :background-repeat "no-repeat" :background-position "left"}}
+                (dom/span {:onClick (fn [e] (swap! socialcore/app-state assoc-in [:sort-list] (case (:sort-list @data) 5 6 5)) (socialcore/doswaps))} "Difference")
               )
 
               (dom/div {:className "col-md-3"}

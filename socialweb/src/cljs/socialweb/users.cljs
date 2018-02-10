@@ -28,9 +28,37 @@
 
 (defn comp-users
   [user1 user2]
-  (if (> (compare (:email user1) (:email user2)) 0)
+  (case (:sort-list @socialcore/app-state)
+    1 (if (> (compare (:name user1) (:name user2)) 0)
       false
       true
+    )
+    2 (if (> (compare (:name user1) (:name user2)) 0)
+      true
+      false
+    )
+
+    3 (if (> (compare (:email user1) (:email user2)) 0)
+      false
+      true
+    )
+    4 (if (> (compare (:email user1) (:email user2)) 0)
+      true
+      false
+    )
+
+    5 (if (> (compare (:role user1) (:role user2)) 0)
+      false
+      true
+    )
+    6 (if (> (compare (:role user1) (:role user2)) 0)
+      true
+      false
+    )
+    (if (> (compare (:email user1) (:email user2)) 0)
+      false
+      true
+    )
   )
 )
 
@@ -254,14 +282,14 @@
         (dom/div {:className "panel panel-primary" :style {:margin-left "5px" :margin-top "5px"}}
           (dom/div {:className "panel-heading"}
             (dom/div {:className "row"}
-              (dom/div {:className "col-md-4" :style {:text-align "center"}}
-                "Name"
+              (dom/div {:className "col-md-4" :style {:cursor "pointer" :text-align "center":background-image (case (:sort-list @data) 1 "url(images/sort_asc.png" 2 "url(images/sort_desc.png" "url(images/sort_both.png") :background-repeat "no-repeat" :background-position "left"}}
+                (dom/span {:onClick (fn [e] (swap! socialcore/app-state assoc-in [:sort-list] (case (:sort-list @data) 1 2 1)) (socialcore/doswaps))} "Name")
               )
-              (dom/div {:className "col-md-3" :style {:text-align "center"}}
-                "User"
+              (dom/div {:className "col-md-3" :style {:cursor "pointer" :text-align "center":background-image (case (:sort-list @data) 3 "url(images/sort_asc.png" 4 "url(images/sort_desc.png" "url(images/sort_both.png") :background-repeat "no-repeat" :background-position "left"}}
+                (dom/span {:onClick (fn [e] (swap! socialcore/app-state assoc-in [:sort-list] (case (:sort-list @data) 3 4 3)) (socialcore/doswaps))} "User")
               )
-              (dom/div {:className "col-md-2" :style {:text-align "center"}}
-                "Role"
+              (dom/div {:className "col-md-2" :style {:cursor "pointer" :text-align "center":background-image (case (:sort-list @data) 5 "url(images/sort_asc.png" 6 "url(images/sort_desc.png" "url(images/sort_both.png") :background-repeat "no-repeat" :background-position "left"}}
+                (dom/span {:onClick (fn [e] (swap! socialcore/app-state assoc-in [:sort-list] (case (:sort-list @data) 5 6 5)) (socialcore/doswaps))} "Role")
               )
               (dom/div {:className "col-md-1" :style {:text-align "center"}}
                 "Locked"

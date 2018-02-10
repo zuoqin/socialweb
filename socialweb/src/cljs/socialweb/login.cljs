@@ -444,7 +444,7 @@
   (let [
     
     ]
-    (.log js/console (str "from= " (:from query-params)))
+    ;(.log js/console (str "from= " (:from query-params)))
     (get-social-user id (:from query-params))    
   )
 )
@@ -465,7 +465,12 @@
 (defn main []
   ;(-> js/document .-location (set! "#/login"))
   (.log js/console )
-  (if (= (.-href (.-location js/window)) "http://devstat.aytm.com:3449/")
+  (if
+    (or
+      (= (.-href (.-location js/window)) "http://devstat.aytm.com:10555/")
+      (= (.-href (.-location js/window)) "http://devstat.aytm.com:3449/")
+    )
+    
     (-> js/document .-location (set! "#/login"))
   )
   ;;(aset js/window "location" "#/login")

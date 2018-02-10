@@ -28,7 +28,7 @@
 (def ch (chan (dropping-buffer 2)))
 
 
-(defonce app-state (atom {:email "" :userspage 0 :nomoreusers false :selecteduser {} :search "" :users [] :view 1}))
+(defonce app-state (atom {:sort-list 0 :email "" :userspage 0 :nomoreusers false :selecteduser {} :search "" :users [] :view 1}))
 
 
 ;{:id 1 :name "Masha" :email "masha@gmail.com"} {:id 2 :name "Petya" :email "petya@gmail.com"} {:id 3 :name "Sanya" :email "sanya@gmail.com"}

@@ -32,6 +32,7 @@
                  [selmer "1.10.5"]
                  [com.draines/postal "2.0.2"]
                  [clj-jwt "0.1.1"]
+                 [cheshire "5.8.0"]
                  [jumblerg/ring.middleware.cors "1.0.1"]        
                  ]
 
@@ -56,7 +57,7 @@
    :test          [:project/dev :project/test :profiles/test]
 
    :project/dev  {:dependencies [[prone "1.1.4"]
-                                 [ring/ring-mock "0.3.0"]
+                                 [ring/ring-mock "0.3.2"]
                                  [ring/ring-devel "1.5.0"]
                                  [pjstadig/humane-test-output "0.8.1"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.18.1"]]

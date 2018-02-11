@@ -9,7 +9,7 @@
             [environ.core :refer [env]]
             [clj-http.client :as client]
             [clojure.data.json :as json]
-
+            [org.httpkit.client :as http]
             [clj-time.format :as f]
             [clj-time.coerce :as c]
             [clj-time.core :as t]

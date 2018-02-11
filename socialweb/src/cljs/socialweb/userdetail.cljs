@@ -570,7 +570,7 @@
                   
                 )
                 (dom/div {:className "row"}
-                  (dom/img {:id "userpic" :style {:display (if (or (nil? (:pic (:selecteduser @socialcore/app-state))) (= "" (:pic (:selecteduser @socialcore/app-state)))) "none" "block") :max-width "200px" :max-height "200px"} :src (:pic (:selecteduser @socialcore/app-state)) :alt "User image"})
+                  (dom/img {:id "userpic" :style {:display (if (or (nil? (:pic (:selecteduser @socialcore/app-state))) (= "" (:pic (:selecteduser @socialcore/app-state)))) "none" "block") :max-width "138px" :max-height "200px"} :src (:pic (:selecteduser @socialcore/app-state)) :alt "User image"})
                 )
               )              
             )

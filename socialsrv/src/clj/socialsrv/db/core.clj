@@ -94,7 +94,7 @@
                         (d/db conn) email)))
 
     ]
-    (println (str "userid=" userid) )
+    ;(println (str "userid=" userid) )
     (d/transact
       conn
       [{

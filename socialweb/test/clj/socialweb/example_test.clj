@@ -1,4 +1,4 @@
-(ns shelters.example-test
+(ns socialweb.example-test
   (:require [clojure.test :refer :all]))
 
 (deftest example-passing-test

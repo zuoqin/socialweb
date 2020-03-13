@@ -22,6 +22,18 @@
 (enable-console-print!)
 
 
+(defn set-google-button []
+  (set! (.-display (.-style (.getElementById js/document "socialbuttons"))) "block")
+  ;(set! (.-display (.-style (aget (.getElementsByClassName js/document "g-signin2") 0))) "block")
+)
+
+(defn onMount [data owner]
+  ;(.focus (om/get-node owner "txtUserName" ))
+  (set! (.-title js/document) "Beeper Login")
+  (set-google-button)
+)
+
+
 (def application
   (js/document.getElementById "app"))
 
@@ -161,11 +173,17 @@
   )
   (render
     [_]
-    (dom/div {:className "container" :style {:width "100%" :padding-top "283px" :backgroundImage "url(/images/loginbackground.png)" :backgroundSize "cover"}  }
+    (dom/div {:className "container" :style {:width "100%" :padding-top "283px"}}  ;; :backgroundImage "url(/images/loginbackground.png)" :backgroundSize "cover"}  }
       ;(om/build t5pcore/website-view data {})
       ;(dom/h1 "Login Page")
       ;(dom/img {:src "images/LogonBack.jpg" :className "img-responsive company-logo-logon"})
       (dom/form {:className "form-signin"}
+
+
+        (dom/input #js {:type "text" :id "firstname" :value (:firstname @app-state) :className "form-control" :placeholder "First Name" :onChange (fn [e] (handleChange e ))})
+        (dom/input #js {:type "text" :id "lastname" :value (:lastname @app-state) :className "form-control" :placeholder "Last Name" :onChange (fn [e] (handleChange e ))})
+
+
         (dom/input #js {:type "text" :id "username" :value (:username @app-state) :className "form-control" :placeholder "Email" :onChange (fn [e] (handleChange e ))})
         (if (not (socialcore/valid-email (:username @app-state)))
           (dom/div {:style {:color "red"}} "enter correct email address")
@@ -174,10 +192,13 @@
         (if (not (socialcore/check-password-complexity (:password @app-state)))
           (dom/div {:style {:color "red"}} "password should be at least 8 characters long")
         )
-        
-        (dom/div {:className (if (= (:state @app-state) 0) "btn btn-lg btn-primary btn-block" "btn btn-lg btn-primary btn-block m-progress") :disabled (or (not (socialcore/check-password-complexity (:password @app-state))) (not (socialcore/valid-email (:username @app-state))))  :type "button" :onClick (fn [e](checklogin))} "Registration")
+        (dom/input {:className "form-control" :id "confirmpassword" :value (:confirmpassword @app-state) :type "password"  :placeholder "Confirm Password" :onChange (fn [e] (handleChange e ))} )
 
-        (dom/div {:className "btn btn-lg btn-primary btn-block" :type "button" :onClick (fn [e] (-> js/document .-location (set! "#/login")))} "Back")
+        
+        (dom/div {:className (if (= (:state @app-state) 0) "btn btn-lg btn-success btn-block" "btn btn-lg btn-primary btn-block m-progress") :disabled (or (not (socialcore/check-password-complexity (:password @app-state))) (not (socialcore/valid-email (:username @app-state))))  :type "button" :onClick (fn [e](checklogin))} "Registration")
+
+        (dom/div {:className "btn btn-lg btn-sucess btn-block" :type "button" :onClick (fn [e] (-> js/document .-location (set! "#/login")))} "Back")
+        
         
       )
       (addModal)

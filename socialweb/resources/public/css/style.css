@@ -1,3 +1,43 @@
+.Row {
+  margin-bottom: 6px;
+}
+.Row.horizontalRow {
+  position: relative;
+  margin-bottom: 18px;
+  margin-top: 17px;
+}
+.Row.horizontalRow .horizontalText {
+  width: 100%;
+  text-align: center;
+  background-color: #ffffff;
+  position: relative;
+  color: #ababab;
+  font-size: 14px;
+  z-index: 1;
+  overflow: hidden;
+}
+.Row.horizontalRow .horizontalText:before,
+.Row.horizontalRow .horizontalText:after {
+  width: 50%;
+  top: 51%;
+  overflow: hidden;
+  height: 1px;
+  background-color: #d0d0d0;
+  content: '\a0';
+  position: absolute;
+}
+.Row.horizontalRow .horizontalText:before {
+  margin-left: -52%;
+  text-align: right;
+}
+.Row.horizontalRow .horizontalText:after {
+  margin-left: 2%;
+}
+.Row.horizontalSpace {
+  margin-top: 0px;
+  margin-bottom: 30px;
+}
+
 @media print
 {    
   .no-print, .no-print *

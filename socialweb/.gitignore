@@ -14,4 +14,4 @@
 /.nrepl-port
 /log
 /resources/public/js/**
-project.clj
+# project.clj

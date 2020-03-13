@@ -23,7 +23,7 @@
             [om-bootstrap.input :as i]
             [om-bootstrap.button :as b]
             [om-bootstrap.panel :as p]
-	    [chord.client :refer [ws-ch]]
+	    ;;[chord.client :refer [ws-ch]]
             [cljs.core.async :refer [put! dropping-buffer chan take! <! >! timeout close!]]
   )
   (:import goog.History)

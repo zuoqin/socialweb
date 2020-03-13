@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>Time Zones Managemnet</title>
     
-    <meta name="google-signin-client_id" content="135819791698-j5rf028jr7jah69lmjhfmlhq5c3l3sia.apps.googleusercontent.com">
+    <meta name="google-signin-client_id" content="135819791698-qje5ft11vubvgjdfku00so3rsknldbhk.apps.googleusercontent.com">
     <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
     <link href="css/bootstrap2-toggle.min.css" rel="stylesheet" type="text/css">
 
@@ -33,16 +33,21 @@
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?v=220171001"/>
   </head>
   <body>
-    <div id="app">
-    </div>
-
-    <div class="row" id="socialbuttons">
+    <div class="row" id="socialbuttons" style="display:block; width: 40%; left: 30%; position:absolute;">
       <div class="col-md-6" style="text-align: right;">
         <div class="fb-login-button" data-max-rows="1" data-size="large" data-button-type="continue_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="false" onlogin="checkLoginState();"></div>
       </div>
       <div class="col-md-6" style="text-align: left; ">
         <div id="g-signin2"  style="margin-top -100px;"></div>
       </div>
+
+
+     <div class="Row horizontalRow">
+              <div class="horizontalText">or</div>
+              <div class="horizontalLine"></div>
+     </div>
+    </div>
+    <div id="app">
     </div>
 
     <script>

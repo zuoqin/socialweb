@@ -2,12 +2,14 @@
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
-  :repositories {"my.datomic.com" {:url "https://my.datomic.com/repo"
-                                 :creds :gpg}}
+  :repositories {"my.datomic.com" {:url "https://my.datomic.com/repo" :username [:env/my_datomic_username]
+                        :password [:env/my_datomic_password]}}
   :dependencies [[bouncer "1.0.0"]
                  [ch.qos.logback/logback-classic "1.1.7"]
                  ;;[com.datomic/datomic-free "0.9.5394" :exclusions [org.slf4j/log4j-over-slf4j org.slf4j/slf4j-nop]]
                  [com.datomic/datomic-pro "0.9.5350" :exclusions [org.slf4j/log4j-over-slf4j org.slf4j/slf4j-nop]]
+                 [org.flatland/ordered "1.5.7"]
+                 [jakarta.xml.bind/jakarta.xml.bind-api "2.3.3"]
                  [compojure "1.5.1"]
                  [cprop "0.1.9"]
                  [luminus-http-kit "0.1.4"]
